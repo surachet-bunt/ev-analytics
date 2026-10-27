@@ -1,19 +1,14 @@
 <!DOCTYPE html>
 <html lang="th" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#090d16">
-  <title>EV Analytics Pro 2026 | Balanced Intelligence</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#090d16">
+<title>EV Analytics Pro 2026 | Balanced Intelligence</title>
 
-  <!-- 👈 ย้าย Supabase SDK มาไว้ตรงนี้ใน <head> -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase JS Client SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- โค้ดอื่นๆ ต่อจากนี้ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  ...
-</head>
-  
 <script>
 (function(){
   var stored=null, t;
@@ -497,6 +492,11 @@ body{
 </div>
 
 <script>
+// ตั้งค่าเชื่อมต่อ Supabase โดยตรง (ใส่ URL และ Anon Key ของคุณที่นี่)
+const SUPABASE_URL = 'https://pgjvmvxdlsufukjdakpo.supabase.co';
+const SUPABASE_ANON_KEY = 'วาง_Anon_Key_ของคุณที่นี่'; 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let globalData = null;
 let trendChartInstance = null;
 let marketChartInstance = null;
@@ -638,80 +638,144 @@ function calculateCostComparison() {
   document.getElementById('calcTableBody').innerHTML = html;
 }
 
-function loadExternalMarketData(selectedMonth, selectedYear) {
+async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
-  
-  google.script.run
-    .withSuccessHandler(res => {
-      if (res.status === 'success') {
-        externalLoaded = true;
-        currentExternalItems = res.items || [];
-        
-        document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: ${res.source} | ข้อมูลประจำเดือน: ${res.targetMonth}`;
-        document.getElementById('ext-stat-month').innerText = nf.format(res.summary.totalMonth) + ' คัน';
-        document.getElementById('ext-stat-topbrand').innerText = res.summary.topBrand;
-        document.getElementById('ext-stat-gainer').innerText = res.summary.topGainer;
+  try {
+    const { data: res, error } = await supabase.from('external_ev_market').select('*').eq('ev_type', 'BEV');
+    if (error) throw error;
 
-        const selectEl = document.getElementById('selectMonthYear');
-        if (selectEl.options.length <= 1 && res.availableMonths) {
-          let optHtml = '';
-          res.availableMonths.forEach(m => {
-            const val = `${m.month}_${m.year}`;
-            const label = `${m.month} ${m.year}`;
-            const isSelected = label === res.targetMonth ? 'selected' : '';
-            optHtml += `<option value="${val}" ${isSelected}>${label}</option>`;
-          });
-          selectEl.innerHTML = optHtml;
-        }
+    if (!res || res.length === 0) {
+      document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
+      return;
+    }
 
-        let html = '';
-        const totalTop10 = currentExternalItems.reduce((sum, i) => sum + i.units, 0) || 1;
+    const allRows = res.map(r => ({
+      year: r.year,
+      month: r.month.trim(),
+      rank: r.rank,
+      brand: r.brand,
+      units: r.units,
+      evType: r.ev_type
+    }));
 
-        if (currentExternalItems.length === 0) {
-          html = '<tr><td colspan="6" style="text-align:center; color:var(--mute);">ไม่พบข้อมูล Top 10 BEV ในเดือนนี้</td></tr>';
-        } else {
-          const chartLabels = [];
-          const chartData = [];
+    const monthYearSet = new Set();
+    allRows.forEach(r => {
+      monthYearSet.add(JSON.stringify({ month: r.month, year: r.year }));
+    });
+    const availableMonths = Array.from(monthYearSet).map(s => JSON.parse(s));
 
-          currentExternalItems.forEach((item, index) => {
-            const rank = index + 1;
-            const rankBadge = rank <= 3 ? `<span class="badge badge-pos">#${rank}</span>` : `<span class="badge badge-neutral">#${rank}</span>`;
-            const marketShare = ((item.units / totalTop10) * 100).toFixed(1) + '%';
-            
-            let growthHtml = '<span class="badge badge-neutral">—</span>';
-            if (item.momAvailable) {
-              const isUp = item.momGrowth >= 0;
-              const badgeClass = isUp ? 'badge-pos' : 'badge-neg';
-              const arrow = isUp ? '▲' : '▼';
-              growthHtml = `<span class="badge ${badgeClass}">${arrow} ${Math.abs(item.momGrowth).toFixed(1)}%</span>`;
-            }
+    let targetMonth = selectedMonth;
+    let targetYear = Number(selectedYear);
 
-            chartLabels.push(item.brand);
-            chartData.push(item.units);
-
-            html += `
-              <tr>
-                <td><b>${rankBadge}</b></td>
-                <td><b style="color: var(--accent); font-size: 14px;">${item.brand}</b></td>
-                <td><b>${nf.format(item.units)}</b></td>
-                <td><span style="font-weight:700; color:var(--mute);">${marketShare}</span></td>
-                <td>${growthHtml}</td>
-                <td>${item.month} ${item.year}</td>
-              </tr>
-            `;
-          });
-
-          renderExtMarketChart(chartLabels, chartData);
-        }
-        document.getElementById('externalTableBody').innerHTML = html;
-      } else {
-        Swal.fire({ icon: 'error', title: 'โหลดข้อมูลไม่สำเร็จ', text: res.message });
+    if (!targetMonth || !targetYear) {
+      if (allRows.length > 0) {
+        const latest = allRows[allRows.length - 1];
+        targetMonth = latest.month;
+        targetYear = latest.year;
       }
-    })
-    .withFailureHandler(err => {
-      Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
-    })
-    .getExternalMarketData(selectedMonth, selectedYear);
+    }
+
+    const thaiMonthsOrder = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    let prevMonth = '';
+    let prevYear = targetYear;
+    const mIdx = thaiMonthsOrder.indexOf(targetMonth);
+    if (mIdx > 0) {
+      prevMonth = thaiMonthsOrder[mIdx - 1];
+    } else if (mIdx === 0) {
+      prevMonth = 'ธันวาคม';
+      prevYear = targetYear - 1;
+    }
+
+    let filteredItems = allRows.filter(i => i.month === targetMonth && i.year === targetYear);
+    filteredItems.sort((a, b) => b.units - a.units);
+    const top10Items = filteredItems.slice(0, 10);
+
+    let prevItems = allRows.filter(i => i.month === prevMonth && i.year === prevYear);
+    const prevMap = new Map();
+    prevItems.forEach(pi => prevMap.set(pi.brand, pi.units));
+
+    top10Items.forEach(item => {
+      const prevUnits = prevMap.get(item.brand);
+      if (prevUnits !== undefined && prevUnits > 0) {
+        item.momGrowth = ((item.units - prevUnits) / prevUnits) * 100;
+        item.momAvailable = true;
+      } else {
+        item.momGrowth = 0;
+        item.momAvailable = false;
+      }
+    });
+
+    const totalMonth = top10Items.reduce((sum, i) => sum + i.units, 0);
+    const topBrand = top10Items.length > 0 ? top10Items[0].brand : '-';
+    
+    let topGainer = '-';
+    let maxGrowth = -Infinity;
+    top10Items.forEach(i => {
+      if (i.momAvailable && i.momGrowth > maxGrowth) {
+        maxGrowth = i.momGrowth;
+        topGainer = i.brand;
+      }
+    });
+
+    externalLoaded = true;
+    currentExternalItems = top10Items;
+    
+    document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth} ${targetYear}`;
+    document.getElementById('ext-stat-month').innerText = nf.format(totalMonth) + ' คัน';
+    document.getElementById('ext-stat-topbrand').innerText = topBrand;
+    document.getElementById('ext-stat-gainer').innerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : 'ไม่มีข้อมูลเปรียบเทียบ';
+
+    const selectEl = document.getElementById('selectMonthYear');
+    if (selectEl.options.length <= 1 && availableMonths) {
+      let optHtml = '';
+      availableMonths.forEach(m => {
+        const val = `${m.month}_${m.year}`;
+        const label = `${m.month} ${m.year}`;
+        const isSelected = label === `${targetMonth} ${targetYear}` ? 'selected' : '';
+        optHtml += `<option value="${val}" ${isSelected}>${label}</option>`;
+      });
+      selectEl.innerHTML = optHtml;
+    }
+
+    let html = '';
+    const totalTop10 = totalMonth || 1;
+    const chartLabels = [];
+    const chartData = [];
+
+    top10Items.forEach((item, index) => {
+      const rank = index + 1;
+      const rankBadge = rank <= 3 ? `<span class="badge badge-pos">#${rank}</span>` : `<span class="badge badge-neutral">#${rank}</span>`;
+      const marketShare = ((item.units / totalTop10) * 100).toFixed(1) + '%';
+      
+      let growthHtml = '<span class="badge badge-neutral">—</span>';
+      if (item.momAvailable) {
+        const isUp = item.momGrowth >= 0;
+        const badgeClass = isUp ? 'badge-pos' : 'badge-neg';
+        const arrow = isUp ? '▲' : '▼';
+        growthHtml = `<span class="badge ${badgeClass}">${arrow} ${Math.abs(item.momGrowth).toFixed(1)}%</span>`;
+      }
+
+      chartLabels.push(item.brand);
+      chartData.push(item.units);
+
+      html += `
+        <tr>
+          <td><b>${rankBadge}</b></td>
+          <td><b style="color: var(--accent); font-size: 14px;">${item.brand}</b></td>
+          <td><b>${nf.format(item.units)}</b></td>
+          <td><span style="font-weight:700; color:var(--mute);">${marketShare}</span></td>
+          <td>${growthHtml}</td>
+          <td>${item.month} ${item.year}</td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('externalTableBody').innerHTML = html;
+    renderExtMarketChart(chartLabels, chartData);
+
+  } catch (err) {
+    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
+  }
 }
 
 function onChangeExternalFilter() {
@@ -774,7 +838,6 @@ function exportExternalCSV() {
   document.body.removeChild(a);
 }
 
-// 📥 ฟังก์ชัน Export CSV สำหรับข้อมูลภายใน (Registration Ledger)
 function exportInternalCSV() {
   if (!globalData || !globalData.rows || globalData.rows.length === 0) {
     Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูลสำหรับ Export', text: 'กรุณารอให้ข้อมูลโหลดเสร็จเรียบร้อยก่อน' });
@@ -815,33 +878,126 @@ function exportInternalCSV() {
   document.body.removeChild(a);
 }
 
-function refreshDisplay() {
+async function refreshDisplay() {
   document.getElementById('syncText').innerText = 'กำลังโหลด...';
-  google.script.run
-    .withSuccessHandler(res => {
-      if(res.error) { alert(res.error); return; }
-      globalData = res;
-      document.getElementById('syncText').innerText = 'ซิงก์ล่าสุดเรียบร้อย';
-      renderTable(res);
-      renderCharts(res);
-      document.getElementById('stat-total').innerText = nf.format(res.grandTotal);
-      document.getElementById('stat-brands').innerText = res.rows.length;
-    })
-    .withFailureHandler(err => alert('Error: ' + err.message))
-    .getAllData();
+  try {
+    const { data: rawData, error } = await supabase
+      .from('ev_data')
+      .select('id, brand, year, battery_type, ev_monthly_sales(month_name, units)');
+
+    if (error) throw error;
+
+    const monthSet = new Set();
+    rawData.forEach(item => {
+      if (item.ev_monthly_sales) {
+        item.ev_monthly_sales.forEach(s => monthSet.add(s.month_name));
+      }
+    });
+
+    let monthHeadersOnly = Array.from(monthSet);
+    if (monthHeadersOnly.length === 0) monthHeadersOnly = ['Jan 2026'];
+    
+    const monthOrder = { 'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12 };
+    monthHeadersOnly.sort((a, b) => {
+      const partsA = String(a).trim().split(/\s+/);
+      const partsB = String(b).trim().split(/\s+/);
+      const mNameA = partsA[0] ? partsA[0].toLowerCase().substring(0, 3) : '';
+      const mNameB = partsB[0] ? partsB[0].toLowerCase().substring(0, 3) : '';
+      const yearA = parseInt(partsA[1]) || 2026;
+      const yearB = parseInt(partsB[1]) || 2026;
+      if (yearA !== yearB) return yearA - yearB;
+      return (monthOrder[mNameA] || 99) - (monthOrder[mNameB] || 99);
+    });
+
+    const headers = ['No', 'Brand', 'Year', 'Battery'].concat(monthHeadersOnly);
+    const displayHeaders = ['No', 'Brand', 'Year', 'Battery'].concat(monthHeadersOnly.slice(-4));
+
+    const monthTotals = Object.create(null);
+    monthHeadersOnly.forEach(m => { monthTotals[m] = 0; });
+    let grandTotal = 0;
+
+    const rows = rawData.map((r, index) => {
+      const obj = Object.create(null);
+      obj.rowNum = r.id;
+      obj.no = index + 1;
+      obj.brand = String(r.brand || '-');
+      obj.year = r.year || '-';
+      obj.batteryType = String(r.battery_type || '-').toUpperCase();
+      obj.total = 0;
+      obj.allMonthlyData = [];
+
+      const salesMap = {};
+      if (r.ev_monthly_sales) {
+        r.ev_monthly_sales.forEach(s => { salesMap[s.month_name] = s.units; });
+      }
+
+      monthHeadersOnly.forEach(m => {
+        const val = Number(salesMap[m] || 0);
+        obj[m] = val;
+        obj.total += val;
+        obj.allMonthlyData.push(val);
+        monthTotals[m] += val;
+      });
+
+      grandTotal += obj.total;
+
+      const series = obj.allMonthlyData;
+      let lastIdx = series.length - 1;
+      while (lastIdx >= 0 && series[lastIdx] === 0) lastIdx--;
+
+      if (lastIdx <= 0) {
+        obj.growth = 0;
+        obj.growthAvailable = false;
+      } else {
+        const last = series[lastIdx];
+        const prev = series[lastIdx - 1];
+        obj.growth = (prev === 0) ? 0 : ((last - prev) / prev) * 100;
+        obj.growthAvailable = (prev !== 0);
+      }
+      return obj;
+    }).sort((a, b) => b.total - a.total);
+
+    rows.forEach((r, idx) => { r.no = idx + 1; });
+
+    globalData = {
+      fullHeaders: headers,
+      displayHeaders: displayHeaders,
+      rows: rows,
+      monthTotals: monthTotals,
+      grandTotal: grandTotal,
+      trend: {
+        months: monthHeadersOnly,
+        datasets: rows.slice(0, 5).map(r => ({ label: r.brand, data: r.allMonthlyData }))
+      }
+    };
+
+    document.getElementById('syncText').innerText = 'ซิงก์ข้อมูลสำเร็จ';
+    renderTable(globalData);
+    renderCharts(globalData);
+    document.getElementById('stat-total').innerText = nf.format(globalData.grandTotal);
+    document.getElementById('stat-brands').innerText = globalData.rows.length;
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('syncText').innerText = 'เกิดข้อผิดพลาดในการโหลด';
+  }
 }
 
-function loadPrices() {
-  google.script.run
-    .withSuccessHandler(p => {
-      document.getElementById('stat-offpeak').innerText = '฿' + p.offPeak;
-      document.getElementById('stat-peak').innerText = '฿' + p.peak;
-      document.getElementById('stat-dc').innerText = '฿' + p.stationDC;
-      if(p.offPeak) document.getElementById('calcPriceEvHome').value = p.offPeak;
-      if(p.stationDC) document.getElementById('calcPriceEvStation').value = p.stationDC;
+async function loadPrices() {
+  try {
+    const { data } = await supabase.from('ev_prices').select('*').order('id', { ascending: false }).limit(1);
+    if (data && data.length > 0) {
+      const p = data[0];
+      document.getElementById('stat-offpeak').innerText = '฿' + Number(p.off_peak).toFixed(2);
+      document.getElementById('stat-peak').innerText = '฿' + Number(p.peak).toFixed(2);
+      document.getElementById('stat-dc').innerText = '฿' + Number(p.station_dc).toFixed(2);
+      if(p.off_peak) document.getElementById('calcPriceEvHome').value = Number(p.off_peak).toFixed(2);
+      if(p.station_dc) document.getElementById('calcPriceEvStation').value = Number(p.station_dc).toFixed(2);
       calculateCostComparison();
-    })
-    .getLastEVPrices();
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function renderTable(res) {
@@ -1049,70 +1205,105 @@ function buildDynamicInputs(existingRow = null) {
   });
 }
 
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
   e.preventDefault();
   const formData = {
     rowNum: document.getElementById('formRowNum').value,
-    no: document.getElementById('formOriginalNo').value,
-    brand: document.getElementById('brand').value,
-    year: document.getElementById('year').value,
-    batteryType: document.getElementById('batteryType').value
+    brand: document.getElementById('brand').value.trim(),
+    year: Number(document.getElementById('year').value),
+    batteryType: document.getElementById('batteryType').value.trim().toUpperCase()
   };
 
+  const monthlyPayloads = [];
   document.querySelectorAll('.month-input').forEach(input => {
     const monthName = input.getAttribute('data-month');
-    const val = input.value.trim();
-    if(val !== '') {
-      formData[monthName] = Number(val);
-    }
+    const val = Number(input.value.trim()) || 0;
+    monthlyPayloads.push({ monthName, val });
   });
 
-  google.script.run
-    .withSuccessHandler(res => {
-      if(res.status === 'success') {
-        toggleForm(false);
-        refreshDisplay();
-        Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสำเร็จ', showConfirmButton:false, timer:1500});
-      } else {
-        Swal.fire({icon: 'error', title: 'ไม่สามารถบันทึกได้', text: res.message});
+  try {
+    let evId = formData.rowNum ? Number(formData.rowNum) : null;
+
+    if (evId) {
+      const { error: updateErr } = await supabase.from('ev_data').update({
+        brand: formData.brand,
+        year: formData.year,
+        battery_type: formData.batteryType
+      }).eq('id', evId);
+      if (updateErr) throw updateErr;
+    } else {
+      const { data: inserted, error: insertErr } = await supabase.from('ev_data').insert([{
+        brand: formData.brand,
+        year: formData.year,
+        battery_type: formData.batteryType
+      }]).select();
+      if (insertErr) throw insertErr;
+      if (inserted && inserted.length > 0) {
+        evId = inserted[0].id;
       }
-    })
-    .saveOrUpdateData(formData);
+    }
+
+    for (const m of monthlyPayloads) {
+      const { error: upsertErr } = await supabase.from('ev_monthly_sales').upsert({
+        ev_id: evId,
+        month_name: m.monthName,
+        units: m.val
+      }, { onConflict: 'ev_id,month_name' });
+      if (upsertErr) throw upsertErr;
+    }
+
+    toggleForm(false);
+    refreshDisplay();
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสำเร็จ', showConfirmButton:false, timer:1500});
+
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'ไม่สามารถบันทึกได้', text: err.message});
+  }
 }
 
-function deleteRecord(rowNum) {
+async function deleteRecord(rowNum) {
   Swal.fire({
     title: 'ยืนยันการลบรายการนี้?',
     icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
     confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
-  }).then(result => {
+  }).then(async result => {
     if(result.isConfirmed) {
-      google.script.run
-        .withSuccessHandler(res => {
-          if(res.status === 'success') {
-            refreshDisplay();
-            Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
-          } else {
-            Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: res.message});
-          }
-        })
-        .deleteData(rowNum);
+      try {
+        const { error } = await supabase.from('ev_data').delete().eq('id', Number(rowNum));
+        if (error) throw error;
+        refreshDisplay();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
     }
   });
 }
 
-function openAddColumnModal() {
+async function openAddColumnModal() {
   Swal.fire({
     title: 'เพิ่มคอลัมน์เดือนใหม่', input: 'text', inputPlaceholder: 'เช่น May 2026',
     showCancelButton: true, confirmButtonText: 'เพิ่ม', cancelButtonText: 'ยกเลิก'
-  }).then(r => {
+  }).then(async r => {
     if(r.isConfirmed && r.value) {
-      google.script.run
-        .withSuccessHandler(res => {
-          if(res.status === 'success') refreshDisplay();
-          else alert(res.message);
-        })
-        .addNewMonth(r.value.trim());
+      const newMonth = r.value.trim();
+      try {
+        const { data: allEv, error: fetchErr } = await supabase.from('ev_data').select('id');
+        if (fetchErr) throw fetchErr;
+
+        if (allEv && allEv.length > 0) {
+          const payload = allEv.map(ev => ({
+            ev_id: ev.id,
+            month_name: newMonth,
+            units: 0
+          }));
+          const { error: insErr } = await supabase.from('ev_monthly_sales').upsert(payload, { onConflict: 'ev_id,month_name' });
+          if (insErr) throw insErr;
+        }
+        refreshDisplay();
+      } catch (err) {
+        alert(err.message);
+      }
     }
   });
 }
