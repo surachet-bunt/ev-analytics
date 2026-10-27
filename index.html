@@ -507,7 +507,7 @@ let externalLoaded = false;
 let currentExternalItems = [];
 const nf = new Intl.NumberFormat('en-US');
 
-const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#f97316'];
+const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
 
 window.addEventListener('DOMContentLoaded', () => {
   refreshDisplay();
@@ -1103,13 +1103,13 @@ function renderCharts(res) {
   const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
   const totalMarket = res.grandTotal || 1;
   const top10 = sortedRows.slice(0, 10);
-  const others = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
+  const othersTotal = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
 
   const labels = top10.map(r => r.brand);
   const data = top10.map(r => r.total);
-  if(others > 0) {
+  if(othersTotal > 0) {
     labels.push('Others');
-    data.push(others);
+    data.push(othersTotal);
   }
 
   const marketCtx = document.getElementById('marketChart').getContext('2d');
@@ -1119,7 +1119,7 @@ function renderCharts(res) {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: BALANCED_COLORS.concat(['#94a3b8', '#64748b', '#475569']).slice(0, labels.length),
+        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
         borderWidth: 0,
         hoverOffset: 6
       }]
@@ -1134,19 +1134,18 @@ function renderCharts(res) {
   const rankListEl = document.getElementById('marketRankList');
   let rankHtml = '';
   
-  // ปรับให้แสดงผลลำดับทั้งหมดตามจำนวนแถวข้อมูลจริง (Top 10-11 ขึ้นไป) แบบรวดเดียวจบ
-  sortedRows.forEach((r, idx) => {
-    const label = r.brand;
+  // แสดงผล Top 10 รายแบรนด์
+  top10.forEach((r, idx) => {
     const val = r.total;
     const percentage = ((val / totalMarket) * 100).toFixed(1);
-    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length] || '#94a3b8';
+    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
     
     rankHtml += `
       <div class="market-rank-item">
         <div class="market-rank-left">
           <span class="market-badge">#${idx + 1}</span>
           <span class="market-dot" style="background: ${color};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${label}">${label}</span>
+          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.brand}">${r.brand}</span>
         </div>
         <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
           <span style="color: var(--text);">${nf.format(val)}</span>
@@ -1155,6 +1154,26 @@ function renderCharts(res) {
       </div>
     `;
   });
+
+  // ถ้ายอดรวมอันดับ 11 ขึ้นไปมากกว่า 0 ให้แสดงกล่อง "Others" ต่อท้าย
+  if(othersTotal > 0) {
+    const othersPercentage = ((othersTotal / totalMarket) * 100).toFixed(1);
+    const othersColor = BALANCED_COLORS[10] || '#94a3b8';
+    rankHtml += `
+      <div class="market-rank-item">
+        <div class="market-rank-left">
+          <span class="market-badge" style="background: var(--border); color: var(--mute);">Others</span>
+          <span class="market-dot" style="background: ${othersColor};"></span>
+          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="แบรนด์อื่นๆ ทั้งหมด">แบรนด์อื่นๆ (Others)</span>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
+          <span style="color: var(--text);">${nf.format(othersTotal)}</span>
+          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${othersPercentage}%)</span>
+        </div>
+      </div>
+    `;
+  }
+
   rankListEl.innerHTML = rankHtml;
 }
 
