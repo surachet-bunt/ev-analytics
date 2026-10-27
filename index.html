@@ -1102,11 +1102,11 @@ function renderCharts(res) {
   
   const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
   const totalMarket = res.grandTotal || 1;
-  const top5 = sortedRows.slice(0, 5);
-  const others = sortedRows.slice(5).reduce((sum, r) => sum + r.total, 0);
+  const top10 = sortedRows.slice(0, 10);
+  const others = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
 
-  const labels = top5.map(r => r.brand);
-  const data = top5.map(r => r.total);
+  const labels = top10.map(r => r.brand);
+  const data = top10.map(r => r.total);
   if(others > 0) {
     labels.push('Others');
     data.push(others);
@@ -1119,7 +1119,7 @@ function renderCharts(res) {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
+        backgroundColor: BALANCED_COLORS.concat(['#94a3b8', '#64748b', '#475569']).slice(0, labels.length),
         borderWidth: 0,
         hoverOffset: 6
       }]
@@ -1136,7 +1136,7 @@ function renderCharts(res) {
   labels.forEach((label, idx) => {
     const val = data[idx];
     const percentage = ((val / totalMarket) * 100).toFixed(1);
-    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
+    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length] || '#94a3b8';
     
     rankHtml += `
       <div class="market-rank-item">
