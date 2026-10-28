@@ -160,7 +160,9 @@ body{
 }
 .car-hero-bg {
   position: absolute; top: 0; right: 0; width: 60%; height: 100%;
-  background-size: cover; background-position: center; opacity: 0.35;
+  background-size: cover; background-position: center; 
+  opacity: 0.75; /* ปรับจาก 0.35 เป็น 0.75 เพื่อให้รูปสว่างและเด่นขึ้นชัดเจน */
+  filter: brightness(1.1); /* เพิ่มความสว่างให้กับรูปภาพเล็กน้อย */
   mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
   -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
 }
