@@ -160,9 +160,7 @@ body{
 }
 .car-hero-bg {
   position: absolute; top: 0; right: 0; width: 60%; height: 100%;
-  background-size: cover; background-position: center; 
-  opacity: 0.75; /* ปรับจาก 0.35 เป็น 0.75 เพื่อให้รูปสว่างและเด่นขึ้นชัดเจน */
-  filter: brightness(1.1); /* เพิ่มความสว่างให้กับรูปภาพเล็กน้อย */
+  background-size: cover; background-position: center; opacity: 0.75; filter: brightness(1.1);
   mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
   -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
 }
@@ -601,6 +599,10 @@ body{
         <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; margin-top: 24px;">📋 ข้อมูลจำเพาะทางเทคนิคเชิงลึก</h3>
         <div class="spec-list-card" style="background: var(--surface-sub);">
           <div class="spec-row">
+            <span class="spec-row-title">💰 ราคาจำหน่าย (Price)</span>
+            <span id="specPrice" class="spec-row-value" style="color: var(--accent); font-size: 16px;">-</span>
+          </div>
+          <div class="spec-row">
             <span class="spec-row-title">พละกำลังสูงสุด</span>
             <span id="specPower" class="spec-row-value">-</span>
           </div>
@@ -649,6 +651,10 @@ body{
       <div class="input-group">
         <label>ชื่อรุ่นย่อย (Trim Name) *</label>
         <input type="text" id="mTrimName" required placeholder="เช่น Standard, Long Range">
+      </div>
+      <div class="input-group">
+        <label>ราคารุ่นย่อย (บาท) *</label>
+        <input type="number" id="mPrice" required placeholder="เช่น 799900">
       </div>
       <div class="input-group">
         <label>ระยะทางวิ่ง (Hero) *</label>
@@ -848,7 +854,6 @@ function renderCarDetails(modelName) {
   });
   trimContainer.innerHTML = trimHtml;
 
-  // เลือก Trim แรกเป็นค่าเริ่มต้น
   selectTrimById(modelTrims[0].id, trimContainer.querySelector('.trim-btn'));
 }
 
@@ -871,6 +876,7 @@ function selectTrimById(id, btnElement) {
     document.getElementById('heroBgImage').style.backgroundImage = `url('${trimData.banner_img}')`;
   }
 
+  document.getElementById('specPrice').innerText = trimData.price ? '฿' + nf.format(trimData.price) : 'ระบุราคาเร็วๆ นี้';
   document.getElementById('specPower').innerText = trimData.power_detail;
   document.getElementById('specTorque').innerText = trimData.torque_val;
   document.getElementById('specBattery').innerText = trimData.battery_val;
@@ -893,6 +899,7 @@ function openCarModal(mode) {
       document.getElementById('carId').value = trimData.id;
       document.getElementById('mBrandModel').value = trimData.brand_model;
       document.getElementById('mTrimName').value = trimData.trim_name;
+      document.getElementById('mPrice').value = trimData.price || '';
       document.getElementById('mRangeVal').value = trimData.range_val;
       document.getElementById('mPowerVal').value = trimData.power_val;
       document.getElementById('mAccVal').value = trimData.acc_val;
@@ -921,6 +928,7 @@ async function handleCarFormSubmit(e) {
   const payload = {
     brand_model: document.getElementById('mBrandModel').value.trim(),
     trim_name: document.getElementById('mTrimName').value.trim(),
+    price: Number(document.getElementById('mPrice').value) || 0,
     range_val: document.getElementById('mRangeVal').value.trim(),
     power_val: document.getElementById('mPowerVal').value.trim(),
     acc_val: document.getElementById('mAccVal').value.trim(),
