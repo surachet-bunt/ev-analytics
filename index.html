@@ -150,6 +150,51 @@ body{
 .badge-neg{ background:var(--neg-bg); color:var(--neg); border-color:var(--neg); }
 .badge-neutral{ background:var(--surface-sub); color:var(--mute); border-color:var(--border); }
 .hide{ display:none !important; }
+
+/* --- Car Detail & Specs Styles --- */
+.car-detail-container { display: flex; flex-direction: column; gap: 24px; }
+.car-hero-card {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #fff; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+.car-hero-bg {
+  position: absolute; top: 0; right: 0; width: 60%; height: 100%;
+  background-size: cover; background-position: center; opacity: 0.35;
+  mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
+}
+.car-hero-content { position: relative; z-index: 2; max-width: 600px; }
+.car-spec-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px; margin-top: 32px; background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px); padding: 20px; border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.car-spec-item { display: flex; flex-direction: column; gap: 4px; }
+.car-spec-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; }
+.car-spec-val { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+.car-spec-sub { font-size: 10px; color: #64748b; }
+
+.trim-selector { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.trim-btn {
+  background: var(--surface-sub); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 24px; border-radius: 12px;
+  font-weight: 700; font-size: 12px; cursor: pointer; transition: all .2s;
+}
+.trim-btn.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.spec-list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.spec-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-row-title { color: var(--mute); font-weight: 600; }
+.spec-row-value { color: var(--text); font-weight: 800; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -168,6 +213,7 @@ body{
       <button class="btn btn-primary" id="btnTabInternal" onclick="switchTab('internal')">📊 ข้อมูลภายใน</button>
       <button class="btn" id="btnTabExternal" onclick="switchTab('external')">🌐 ตลาด EV ประเทศไทย</button>
       <button class="btn" id="btnTabCalc" onclick="switchTab('calc')">🧮 คำนวณและเปรียบเทียบ</button>
+      <button class="btn" id="btnTabCarDetail" onclick="switchTab('carDetail')">🚗 สเปกและข้อมูลรถ</button>
 
       <span id="syncText" style="font-size: 11px; color: var(--mute);">กำลังซิงก์ข้อมูล...</span>
       <button class="btn" onclick="refreshDisplay()">🔄 Refresh</button>
@@ -489,6 +535,90 @@ body{
       </div>
     </div>
   </div>
+
+  <!-- TAB 4: สเปกและข้อมูลรถ (Car Detail & Specs) -->
+  <div id="sectionCarDetail" class="tab-section hide">
+    <div class="car-detail-container">
+      
+      <!-- Hero Banner & Top Specs -->
+      <div class="car-hero-card">
+        <div class="car-hero-bg" style="background-image: url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1200&auto=format&fit=crop');"></div>
+        <div class="car-hero-content">
+          <span class="badge badge-pos" style="margin-bottom: 12px;">Pure Electric (BEV)</span>
+          <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">MG4 Electric - Hatchback EV</h2>
+          <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">ยนตรกรรมพลังงานไฟฟ้า 100% ขับเคลื่อนล้อหลัง ดีไซน์ล้ำสมัย พร้อมเทคโนโลยีความปลอดภัยมาตรฐานระดับสากล</p>
+          
+          <div class="car-spec-grid">
+            <div class="car-spec-item">
+              <span class="car-spec-label">🛣️ ระยะทางวิ่งสูงสุด</span>
+              <span id="heroRange" class="car-spec-val">530 กม.</span>
+              <span class="car-spec-sub">มาตรฐาน NEDC</span>
+            </div>
+            <div class="car-spec-item">
+              <span class="car-spec-label">⚡ กำลังสูงสุด</span>
+              <span id="heroPower" class="car-spec-val">170 แรงม้า</span>
+              <span class="car-spec-sub">มอเตอร์ไฟฟ้าเดี่ยว</span>
+            </div>
+            <div class="car-spec-item">
+              <span class="car-spec-label">⏱️ อัตราเร่ง 0-100</span>
+              <span id="heroAcc" class="car-spec-val">7.7 วินาที</span>
+              <span class="car-spec-sub">โหมด Sport</span>
+            </div>
+            <div class="car-spec-item">
+              <span class="car-spec-label">🔌 ชาร์จเร็ว DC</span>
+              <span id="heroDc" class="car-spec-val">26 นาที</span>
+              <span class="car-spec-sub">10% - 80%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model / Trim Selector -->
+      <div class="card">
+        <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">🎛️ เลือกรุ่นย่อย (Model Trims)</h3>
+        <div class="trim-selector">
+          <button class="trim-btn active" onclick="selectCarTrim('standard', this)">STANDARD</button>
+          <button class="trim-btn" onclick="selectCarTrim('longRange', this)">LONG RANGE (MAX)</button>
+          <button class="trim-btn" onclick="selectCarTrim('xpower', this)">XPOWER (AWD)</button>
+        </div>
+
+        <!-- Detailed Specs List -->
+        <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; margin-top: 24px;">📋 ข้อมูลจำเพาะทางเทคนิคเชิงลึก</h3>
+        <div class="spec-list-card" style="background: var(--surface-sub);">
+          <div class="spec-row">
+            <span class="spec-row-title">พละกำลังสูงสุด</span>
+            <span id="specPower" class="spec-row-value">170 แรงม้า (125 kW)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">แรงบิดสูงสุด</span>
+            <span id="specTorque" class="spec-row-value">250 นิวตัน-เมตร</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">ความจุแบตเตอรี่</span>
+            <span id="specBattery" class="spec-row-value">49 kWh (LFP)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">ระยะทางวิ่งสูงสุดต่อการชาร์จ</span>
+            <span id="specRange" class="spec-row-value">425 กิโลเมตร (NEDC)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">รองรับการชาร์จเร็ว DC (Max)</span>
+            <span id="specDcKw" class="spec-row-value">88 kW (10-80% ใน 26 นาที)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">รองรับการชาร์จไฟบ้าน AC</span>
+            <span id="specAcKw" class="spec-row-value">6.6 kW</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">ระบบขับเคลื่อน</span>
+            <span id="specDrive" class="spec-row-value">ขับเคลื่อนล้อหลัง (RWD)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -528,10 +658,12 @@ function switchTab(target) {
   const secInt = document.getElementById('sectionInternal');
   const secExt = document.getElementById('sectionExternal');
   const secCalc = document.getElementById('sectionCalc');
+  const secCarDetail = document.getElementById('sectionCarDetail');
   
   const btnInt = document.getElementById('btnTabInternal');
   const btnExt = document.getElementById('btnTabExternal');
   const btnCalc = document.getElementById('btnTabCalc');
+  const btnCarDetail = document.getElementById('btnTabCarDetail');
   
   const btnAddRec = document.getElementById('btnAddRecord');
   const btnAddCol = document.getElementById('btnAddCol');
@@ -539,10 +671,12 @@ function switchTab(target) {
   secInt.classList.add('hide');
   secExt.classList.add('hide');
   secCalc.classList.add('hide');
+  if(secCarDetail) secCarDetail.classList.add('hide');
   
   btnInt.className = 'btn';
   btnExt.className = 'btn';
   btnCalc.className = 'btn';
+  if(btnCarDetail) btnCarDetail.className = 'btn';
 
   if (target === 'internal') {
     secInt.classList.remove('hide');
@@ -564,7 +698,52 @@ function switchTab(target) {
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
     calculateCostComparison();
+  } else if (target === 'carDetail') {
+    secCarDetail.classList.remove('hide');
+    btnCarDetail.className = 'btn btn-primary';
+    if(btnAddRec) btnAddRec.style.display = 'none';
+    if(btnAddCol) btnAddCol.style.display = 'none';
   }
+}
+
+// ข้อมูลจำลองสเปกรุ่นย่อยรถยนต์
+const carTrimsData = {
+  standard: {
+    range: '425 กม.', power: '170 แรงม้า', acc: '7.7 วินาที', dcTime: '26 นาที',
+    powerDetail: '170 แรงม้า (125 kW)', torque: '250 นิวตัน-เมตร', battery: '49 kWh (LFP)',
+    rangeDetail: '425 กิโลเมตร (NEDC)', dcKw: '88 kW (10-80% ใน 26 นาที)', acKw: '6.6 kW', drive: 'ขับเคลื่อนล้อหลัง (RWD)'
+  },
+  longRange: {
+    range: '540 กม.', power: '203 แรงม้า', acc: '6.5 วินาที', dcTime: '26 นาที',
+    powerDetail: '203 แรงม้า (150 kW)', torque: '250 นิวตัน-เมตร', battery: '64 kWh (NMC)',
+    rangeDetail: '540 กิโลเมตร (NEDC)', dcKw: '140 kW (10-80% ใน 26 นาที)', acKw: '11 kW (3-Phase)', drive: 'ขับเคลื่อนล้อหลัง (RWD)'
+  },
+  xpower: {
+    range: '480 กม.', power: '435 แรงม้า', acc: '3.8 วินาที', dcTime: '26 นาที',
+    powerDetail: '435 แรงม้า (320 kW)', torque: '600 นิวตัน-เมตร', battery: '64 kWh (NMC)',
+    rangeDetail: '480 กิโลเมตร (NEDC)', dcKw: '140 kW (10-80% ใน 26 นาที)', acKw: '11 kW (3-Phase)', drive: 'ขับเคลื่อน 4 ล้อ (AWD)'
+  }
+};
+
+function selectCarTrim(trimKey, btnElement) {
+  document.querySelectorAll('.trim-btn').forEach(b => b.classList.remove('active'));
+  btnElement.classList.add('active');
+
+  const data = carTrimsData[trimKey];
+  if (!data) return;
+
+  document.getElementById('heroRange').innerText = data.range;
+  document.getElementById('heroPower').innerText = data.power;
+  document.getElementById('heroAcc').innerText = data.acc;
+  document.getElementById('heroDc').innerText = data.dcTime;
+
+  document.getElementById('specPower').innerText = data.powerDetail;
+  document.getElementById('specTorque').innerText = data.torque;
+  document.getElementById('specBattery').innerText = data.battery;
+  document.getElementById('specRange').innerText = data.rangeDetail;
+  document.getElementById('specDcKw').innerText = data.dcKw;
+  document.getElementById('specAcKw').innerText = data.acKw;
+  document.getElementById('specDrive').innerText = data.drive;
 }
 
 function calculateCostComparison() {
@@ -1134,7 +1313,6 @@ function renderCharts(res) {
   const rankListEl = document.getElementById('marketRankList');
   let rankHtml = '';
   
-  // แสดงผล Top 10 รายแบรนด์
   top10.forEach((r, idx) => {
     const val = r.total;
     const percentage = ((val / totalMarket) * 100).toFixed(1);
@@ -1155,7 +1333,6 @@ function renderCharts(res) {
     `;
   });
 
-  // ถ้ายอดรวมอันดับ 11 ขึ้นไปมากกว่า 0 ให้แสดงกล่อง "Others" ต่อท้าย
   if(othersTotal > 0) {
     const othersPercentage = ((othersTotal / totalMarket) * 100).toFixed(1);
     const othersColor = BALANCED_COLORS[10] || '#94a3b8';
@@ -1233,7 +1410,7 @@ async function handleFormSubmit(e) {
   e.preventDefault();
   const formData = {
     rowNum: document.getElementById('formRowNum').value,
-    brand: document.getElementById('brand').value.trim(),
+    brand: document.getElementById('brand'].value.trim(),
     year: Number(document.getElementById('year').value),
     batteryType: document.getElementById('batteryType').value.trim().toUpperCase()
   };
