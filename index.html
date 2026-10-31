@@ -1361,22 +1361,25 @@ async function refreshDisplay() {
 
       grandTotal += obj.total;
 
-      const series = obj.allMonthlyData;
-      let lastIdx = series.length - 1;
-      while (lastIdx >= 0 && series[lastIdx] === 0) lastIdx--;
+         const series = obj.allMonthlyData;
+      const len = series.length;
 
-      if (lastIdx <= 0) {
+      if (len < 2) {
         obj.growth = 0;
         obj.growthAvailable = false;
       } else {
-        const last = series[lastIdx];
-        const prev = series[lastIdx - 1];
+        const last = series[len - 1]; // เดือนล่าสุดของตาราง (เช่น NOV 2026)
+        const prev = series[len - 2]; // เดือนก่อนหน้า (เช่น OCT 2026)
+
         if (last === 0 && prev > 0) {
           obj.growth = -100;
           obj.growthAvailable = true;
+        } else if (prev === 0) {
+          obj.growth = 0;
+          obj.growthAvailable = false;
         } else {
-          obj.growth = (prev === 0) ? 0 : ((last - prev) / prev) * 100;
-          obj.growthAvailable = (prev !== 0);
+          obj.growth = ((last - prev) / prev) * 100;
+          obj.growthAvailable = true;
         }
       }
       return obj;
