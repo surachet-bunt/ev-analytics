@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#090d16">
 <title>EV Analytics Pro 2026 | Balanced Intelligence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><text y=%22.9em%22 font-size=%2290%%22>⚡</text></svg>">
 
 <!-- Supabase JS Client SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -717,7 +718,7 @@ body{
 // ตั้งค่าเชื่อมต่อ Supabase
 // ---------------------------------------------------------
 const SUPABASE_URL = 'https://pgjvmvxdlsufukjdakpo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnanZtdnhkbHN1ZnVramRha3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMTQyNDgsImV4cCI6MjEwODU5MDI0OH0.q3ZNG0fhVMUIZHqp8ViS2EZNDWHywifpeRgNyuvUTxo'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnanZtdnhkbHN1ZnVramRha3BvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNDUwMzIsImV4cCI6MjA4NzcyMTAzMn0.q3ZNG0fhVMUIZHqp8ViS2EZNDWHywifv3ZNG0fhVMUIZHqp8ViS2EZNDWHywif'; 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let globalData = null;
@@ -1370,8 +1371,13 @@ async function refreshDisplay() {
       } else {
         const last = series[lastIdx];
         const prev = series[lastIdx - 1];
-        obj.growth = (prev === 0) ? 0 : ((last - prev) / prev) * 100;
-        obj.growthAvailable = (prev !== 0);
+        if (last === 0 && prev > 0) {
+          obj.growth = -100;
+          obj.growthAvailable = true;
+        } else {
+          obj.growth = (prev === 0) ? 0 : ((last - prev) / prev) * 100;
+          obj.growthAvailable = (prev !== 0);
+        }
       }
       return obj;
     }).sort((a, b) => b.total - a.total);
