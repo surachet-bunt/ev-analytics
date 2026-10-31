@@ -604,6 +604,22 @@ body{
             <span id="specPrice" class="spec-row-value" style="color: var(--accent); font-size: 16px;">-</span>
           </div>
           <div class="spec-row">
+            <span class="spec-row-title">📅 ปีที่ผลิต ออกจำหน่าย</span>
+            <span id="specProdYear" class="spec-row-value">-</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">⏳ อายุของรุ่นรถ (นับจากปีผลิต)</span>
+            <span id="specCarAge" class="spec-row-value" style="color: var(--accent);">-</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">🔋 ประเภทแบตเตอรี่</span>
+            <span id="specBatteryChem" class="spec-row-value">-</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-row-title">⚙️ เทคโนโลยีแบตเตอรี่</span>
+            <span id="specBatteryTech" class="spec-row-value">-</span>
+          </div>
+          <div class="spec-row">
             <span class="spec-row-title">พละกำลังสูงสุด</span>
             <span id="specPower" class="spec-row-value">-</span>
           </div>
@@ -658,6 +674,18 @@ body{
         <input type="number" id="mPrice" required placeholder="เช่น 799900">
       </div>
       <div class="input-group">
+        <label>ปีที่ผลิต ออกจำหน่าย *</label>
+        <input type="number" id="mProdYear" required placeholder="เช่น 2024">
+      </div>
+      <div class="input-group">
+        <label>ประเภทแบตเตอรี่ *</label>
+        <input type="text" id="mBatteryChem" required placeholder="เช่น LFP, NMC">
+      </div>
+      <div class="input-group">
+        <label>เทคโนโลยีแบตเตอรี่ *</label>
+        <input type="text" id="mBatteryTech" required placeholder="เช่น BYD Blade Battery">
+      </div>
+      <div class="input-group">
         <label>ระยะทางวิ่ง (Hero) *</label>
         <input type="text" id="mRangeVal" required placeholder="เช่น 425 กม.">
       </div>
@@ -687,7 +715,7 @@ body{
       </div>
       <div class="input-group">
         <label>ระยะทางวิ่งละเอียด *</label>
-        <input type="text" id="mRangeDetail" required placeholder="เช่น 425 กิโลเมตร (NEDC)">
+        <input type="text" id="mRangeDetail" required placeholder="such as 425 กิโลเมตร (NEDC)">
       </div>
       <div class="input-group">
         <label>ชาร์จเร็ว DC สูงสุด *</label>
@@ -878,6 +906,18 @@ function selectTrimById(id, btnElement) {
   }
 
   document.getElementById('specPrice').innerText = trimData.price ? '฿' + nf.format(trimData.price) : 'ระบุราคาเร็วๆ นี้';
+  
+  // คำนวณอายุของรุ่นรถจากปีที่ผลิต
+  const prodYear = trimData.production_year || new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
+  const carAge = currentYear - prodYear;
+  let ageText = carAge === 0 ? 'ปีแรก (เปิดตัวปีนี้)' : `${carAge} ปี (ผลิตปี ${prodYear})`;
+
+  document.getElementById('specProdYear').innerText = prodYear;
+  document.getElementById('specCarAge').innerText = ageText;
+  document.getElementById('specBatteryChem',).innerText = trimData.battery_chem || '-';
+  document.getElementById('specBatteryTech').innerText = trimData.battery_tech || '-';
+
   document.getElementById('specPower').innerText = trimData.power_detail;
   document.getElementById('specTorque').innerText = trimData.torque_val;
   document.getElementById('specBattery').innerText = trimData.battery_val;
@@ -901,6 +941,9 @@ function openCarModal(mode) {
       document.getElementById('mBrandModel').value = trimData.brand_model;
       document.getElementById('mTrimName').value = trimData.trim_name;
       document.getElementById('mPrice').value = trimData.price || '';
+      document.getElementById('mProdYear').value = trimData.production_year || 2026;
+      document.getElementById('mBatteryChem').value = trimData.battery_chem || '';
+      document.getElementById('mBatteryTech').value = trimData.battery_tech || '';
       document.getElementById('mRangeVal').value = trimData.range_val;
       document.getElementById('mPowerVal').value = trimData.power_val;
       document.getElementById('mAccVal').value = trimData.acc_val;
@@ -916,6 +959,7 @@ function openCarModal(mode) {
     }
   } else {
     document.getElementById('carModalTitle').innerText = 'เพิ่มข้อมูลสเปกรถยนต์ไฟฟ้า';
+    document.getElementById('mProdYear').value = new Date().getFullYear();
   }
 }
 
@@ -930,6 +974,9 @@ async function handleCarFormSubmit(e) {
     brand_model: document.getElementById('mBrandModel').value.trim(),
     trim_name: document.getElementById('mTrimName').value.trim(),
     price: Number(document.getElementById('mPrice').value) || 0,
+    production_year: Number(document.getElementById('mProdYear').value) || 2026,
+    battery_chem: document.getElementById('mBatteryChem').value.trim(),
+    battery_tech: document.getElementById('mBatteryTech').value.trim(),
     range_val: document.getElementById('mRangeVal').value.trim(),
     power_val: document.getElementById('mPowerVal').value.trim(),
     acc_val: document.getElementById('mAccVal').value.trim(),
@@ -1361,15 +1408,15 @@ async function refreshDisplay() {
 
       grandTotal += obj.total;
 
-         const series = obj.allMonthlyData;
+      const series = obj.allMonthlyData;
       const len = series.length;
 
       if (len < 2) {
         obj.growth = 0;
         obj.growthAvailable = false;
       } else {
-        const last = series[len - 1]; // เดือนล่าสุดของตาราง (เช่น NOV 2026)
-        const prev = series[len - 2]; // เดือนก่อนหน้า (เช่น OCT 2026)
+        const last = series[len - 1];
+        const prev = series[len - 2];
 
         if (last === 0 && prev > 0) {
           obj.growth = -100;
