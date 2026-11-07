@@ -346,6 +346,7 @@ body{
           <select id="selectMonthYear" class="search-input" style="width: 180px;" onchange="onChangeExternalFilter()">
             <option value="">-- เลือกเดือน/ปี --</option>
           </select>
+          <button class="btn btn-primary" onclick="openExtModal('add')">＋ จัดการข้อมูลตลาด</button>
           <button class="btn btn-primary" onclick="exportExternalCSV()">📥 Export CSV</button>
         </div>
       </div>
@@ -413,10 +414,11 @@ body{
               <th>ส่วนแบ่งตลาด (Market Share)</th>
               <th>เติบโต (MoM Growth)</th>
               <th>ประจำเดือน</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="externalTableBody">
-            <tr><td colspan="6" style="text-align:center; color:var(--mute);">กำลังโหลดข้อมูล...</td></tr>
+            <tr><td colspan="7" style="text-align:center; color:var(--mute);">กำลังโหลดข้อมูล...</td></tr>
           </tbody>
         </table>
       </div>
@@ -760,6 +762,40 @@ body{
   </form>
 </div>
 
+<!-- Modal สำหรับ เพิ่ม/แก้ไข ตลาด EV ประเทศไทย -->
+<div id="extModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+  <h3 id="extModalTitle" style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">เพิ่มข้อมูลตลาด EV ประเทศไทย</h3>
+  <form id="extSpecForm" onsubmit="handleExtFormSubmit(event)">
+    <input type="hidden" id="extId">
+    <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+      <div class="input-group">
+        <label>ปี ค.ศ. (Year) *</label>
+        <input type="number" id="extYear" required value="2026">
+      </div>
+      <div class="input-group">
+        <label>เดือน (Month) *</label>
+        <input type="text" id="extMonth" required placeholder="เช่น กันยายน">
+      </div>
+      <div class="input-group">
+        <label>อันดับ (Rank) *</label>
+        <input type="number" id="extRank" required min="1" placeholder="เช่น 1">
+      </div>
+      <div class="input-group">
+        <label>แบรนด์รถยนต์ (Brand) *</label>
+        <input type="text" id="extBrand" required placeholder="เช่น JAECOO 5">
+      </div>
+      <div class="input-group">
+        <label>ยอดจดทะเบียน (Units) *</label>
+        <input type="number" id="extUnits" required min="0" placeholder="เช่น 2329">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-primary">💾 บันทึกข้อมูลตลาด</button>
+      <button type="button" class="btn" onclick="closeExtModal()">ยกเลิก</button>
+    </div>
+  </form>
+</div>
+
 <script>
 // ---------------------------------------------------------
 // ตั้งค่าเชื่อมต่อ Supabase
@@ -847,6 +883,92 @@ function switchTab(target) {
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
   }
+}
+
+// ---------------------------------------------------------
+// จัดการข้อมูลตลาด EV ประเทศไทย (External Market Management)
+// ---------------------------------------------------------
+function openExtModal(mode, id = null) {
+  const modal = document.getElementById('extModal');
+  modal.classList.remove('hide');
+  document.getElementById('extSpecForm').reset();
+  document.getElementById('extId').value = '';
+
+  if (mode === 'edit' && id) {
+    const item = currentExternalItems.find(x => x.id === id);
+    if (item) {
+      document.getElementById('extModalTitle').innerText = `แก้ไขข้อมูล: ${item.brand}`;
+      document.getElementById('extId').value = item.id;
+      document.getElementById('extYear').value = item.year;
+      document.getElementById('extMonth').value = item.month;
+      document.getElementById('extRank').value = item.rank;
+      document.getElementById('extBrand').value = item.brand;
+      document.getElementById('extUnits').value = item.units;
+    }
+  } else {
+    document.getElementById('extModalTitle').innerText = 'เพิ่มข้อมูลตลาด EV ประเทศไทย';
+    const selVal = document.getElementById('selectMonthYear').value;
+    if (selVal) {
+      const parts = selVal.split('_');
+      document.getElementById('extMonth').value = parts[0];
+      document.getElementById('extYear').value = parts[1];
+    } else {
+      document.getElementById('extMonth').value = 'ตุลาคม';
+      document.getElementById('extYear').value = 2026;
+    }
+  }
+}
+
+function closeExtModal() {
+  document.getElementById('extModal').classList.add('hide');
+}
+
+async function handleExtFormSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('extId').value;
+  const payload = {
+    year: Number(document.getElementById('extYear').value),
+    month: document.getElementById('extMonth').value.trim(),
+    rank: Number(document.getElementById('extRank').value),
+    brand: document.getElementById('extBrand').value.trim(),
+    units: Number(document.getElementById('extUnits').value),
+    ev_type: 'BEV'
+  };
+
+  try {
+    if (id) {
+      const { error } = await db.from('external_ev_market').update(payload).eq('id', Number(id));
+      if (error) throw error;
+    } else {
+      const { error } = await db.from('external_ev_market').insert([payload]);
+      if (error) throw error;
+    }
+
+    closeExtModal();
+    loadExternalMarketData(payload.month, payload.year);
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกข้อมูลตลาดสำเร็จ', showConfirmButton:false, timer:1500});
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
+  }
+}
+
+async function deleteExtRecord(id) {
+  Swal.fire({
+    title: 'ยืนยันการลบรายการนี้?',
+    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
+    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
+  }).then(async result => {
+    if(result.isConfirmed) {
+      try {
+        const { error } = await db.from('external_ev_market').delete().eq('id', Number(id));
+        if (error) throw error;
+        loadExternalMarketData();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------
@@ -1150,11 +1272,12 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     if (error) throw error;
 
     if (!res || res.length === 0) {
-      document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
+      document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
       return;
     }
 
     const allRows = res.map(r => ({
+      id: r.id,
       year: r.year,
       month: r.month.trim(),
       rank: r.rank,
@@ -1192,8 +1315,8 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     }
 
     let filteredItems = allRows.filter(i => i.month === targetMonth && i.year === targetYear);
-    filteredItems.sort((a, b) => b.units - a.units);
-    const top10Items = filteredItems.slice(0, 10);
+    filteredItems.sort((a, b) => a.rank - b.rank);
+    const top10Items = filteredItems;
 
     let prevItems = allRows.filter(i => i.month === prevMonth && i.year === prevYear);
     const prevMap = new Map();
@@ -1231,7 +1354,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     document.getElementById('ext-stat-gainer').innerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : 'ไม่มีข้อมูลเปรียบเทียบ';
 
     const selectEl = document.getElementById('selectMonthYear');
-    if (selectEl.options.length <= 1 && availableMonths) {
+    if (selectEl) {
       let optHtml = '';
       availableMonths.forEach(m => {
         const val = `${m.month}_${m.year}`;
@@ -1247,8 +1370,8 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     const chartLabels = [];
     const chartData = [];
 
-    top10Items.forEach((item, index) => {
-      const rank = index + 1;
+    top10Items.forEach((item) => {
+      const rank = item.rank;
       const rankBadge = rank <= 3 ? `<span class="badge badge-pos">#${rank}</span>` : `<span class="badge badge-neutral">#${rank}</span>`;
       const marketShare = ((item.units / totalTop10) * 100).toFixed(1) + '%';
       
@@ -1271,6 +1394,10 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
           <td><span style="font-weight:700; color:var(--mute);">${marketShare}</span></td>
           <td>${growthHtml}</td>
           <td>${item.month} ${item.year}</td>
+          <td>
+            <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openExtModal('edit', ${item.id})">แก้ไข</button>
+            <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteExtRecord(${item.id})">ลบ</button>
+          </td>
         </tr>
       `;
     });
@@ -1330,7 +1457,7 @@ function exportExternalCSV() {
 
   currentExternalItems.forEach((item, idx) => {
     const share = ((item.units / total) * 100).toFixed(1) + '%';
-    csvContent += `${idx + 1},"${item.brand}",${item.units},"${share}","${item.month}",${item.year}\r\n`;
+    csvContent += `${item.rank || (idx + 1)},"${item.brand}",${item.units},"${share}","${item.month}",${item.year}\r\n`;
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
