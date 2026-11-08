@@ -215,6 +215,7 @@ body{
       <button class="btn" id="btnTabExternal" onclick="switchTab('external')">🌐 ตลาด EV ประเทศไทย</button>
       <button class="btn" id="btnTabCalc" onclick="switchTab('calc')">🧮 คำนวณและเปรียบเทียบ</button>
       <button class="btn" id="btnTabCarDetail" onclick="switchTab('carDetail')">🚗 สเปกและข้อมูลรถ</button>
+      <button class="btn" id="btnTabCompare" onclick="switchTab('compare')">⚖️ เปรียบเทียบสเปก</button>
 
       <span id="syncText" style="font-size: 11px; color: var(--mute);">กำลังซิงก์ข้อมูล...</span>
       <button class="btn" onclick="refreshDisplay()">🔄 Refresh</button>
@@ -663,6 +664,48 @@ body{
     </div>
   </div>
 
+  <!-- TAB 5: เปรียบเทียบสเปกแบบตัวต่อตัว (Side-by-Side Comparison) -->
+  <div id="sectionCompare" class="tab-section hide">
+    <div class="card" style="margin-bottom: 24px;">
+      <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">⚖️ เปรียบเทียบสเปกรถยนต์ไฟฟ้า (Side-by-Side Comparison)</h3>
+      <p style="font-size: 12px; color: var(--mute); margin-bottom: 24px;">เลือก 2 รุ่นย่อยที่คุณต้องการเปรียบเทียบข้อมูลจำเพาะแบบเทียบชนกัน</p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <div class="card" style="background: var(--surface-sub); padding: 20px;">
+          <div class="input-group">
+            <label>🚗 เลือกรถรุ่นที่ 1 (Car A)</label>
+            <select id="compareCar1" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
+              <option value="">-- เลือกรุ่นรถ --</option>
+            </select>
+          </div>
+        </div>
+        <div class="card" style="background: var(--surface-sub); padding: 20px;">
+          <div class="input-group">
+            <label>🚗 เลือกรถรุ่นที่ 2 (Car B)</label>
+            <select id="compareCar2" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
+              <option value="">-- เลือกรุ่นรถ --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">หัวข้อเปรียบเทียบ</th>
+              <th id="thCar1" style="width: 37.5%; color: var(--accent);">รถคันที่ 1</th>
+              <th id="thCar2" style="width: 37.5%; color: var(--accent);">รถคันที่ 2</th>
+            </tr>
+          </thead>
+          <tbody id="compareTableBody">
+            <tr><td colspan="3" style="text-align:center; color:var(--mute);">กรุณาเลือกรถทั้ง 2 คันเพื่อเริ่มเปรียบเทียบสเปก</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Modal สำหรับ เพิ่ม/แก้ไข สเปกรถ -->
@@ -838,11 +881,13 @@ function switchTab(target) {
   const secExt = document.getElementById('sectionExternal');
   const secCalc = document.getElementById('sectionCalc');
   const secCarDetail = document.getElementById('sectionCarDetail');
+  const secCompare = document.getElementById('sectionCompare');
   
   const btnInt = document.getElementById('btnTabInternal');
   const btnExt = document.getElementById('btnTabExternal');
   const btnCalc = document.getElementById('btnTabCalc');
   const btnCarDetail = document.getElementById('btnTabCarDetail');
+  const btnCompare = document.getElementById('btnTabCompare');
   
   const btnAddRec = document.getElementById('btnAddRecord');
   const btnAddCol = document.getElementById('btnAddCol');
@@ -851,11 +896,13 @@ function switchTab(target) {
   secExt.classList.add('hide');
   secCalc.classList.add('hide');
   if(secCarDetail) secCarDetail.classList.add('hide');
+  if(secCompare) secCompare.classList.add('hide');
   
   btnInt.className = 'btn';
   btnExt.className = 'btn';
   btnCalc.className = 'btn';
   if(btnCarDetail) btnCarDetail.className = 'btn';
+  if(btnCompare) btnCompare.className = 'btn';
 
   if (target === 'internal') {
     secInt.classList.remove('hide');
@@ -882,7 +929,109 @@ function switchTab(target) {
     btnCarDetail.className = 'btn btn-primary';
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
+  } else if (target === 'compare') {
+    secCompare.classList.remove('hide');
+    btnCompare.className = 'btn btn-primary';
+    if(btnAddRec) btnAddRec.style.display = 'none';
+    if(btnAddCol) btnAddCol.style.display = 'none';
+    populateComparisonDropdowns();
   }
+}
+
+// ---------------------------------------------------------
+// ระบบเปรียบเทียบสเปกรถแบบตัวต่อตัว (Side-by-Side Comparison)
+// ---------------------------------------------------------
+function populateComparisonDropdowns() {
+  const sel1 = document.getElementById('compareCar1');
+  const sel2 = document.getElementById('compareCar2');
+  if (!carSpecsList || carSpecsList.length === 0) return;
+
+  let opts = '<option value="">-- เลือกรุ่นรถ --</option>';
+  carSpecsList.forEach(item => {
+    opts += `<option value="${item.id}">${item.brand_model} (${item.trim_name})</option>`;
+  });
+
+  const currentVal1 = sel1.value;
+  const currentVal2 = sel2.value;
+
+  sel1.innerHTML = opts;
+  sel2.innerHTML = opts;
+
+  if (currentVal1) sel1.value = currentVal1;
+  if (currentVal2) sel2.value = currentVal2;
+}
+
+function renderComparisonTable() {
+  const id1 = document.getElementById('compareCar1').value;
+  const id2 = document.getElementById('compareCar2').value;
+  const tbody = document.getElementById('compareTableBody');
+  const th1 = document.getElementById('thCar1');
+  const th2 = document.getElementById('thCar2');
+
+  if (!id1 || !id2) {
+    th1.innerText = 'รถคันที่ 1';
+    th2.innerText = 'รถคันที่ 2';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--mute);">กรุณาเลือกรถทั้ง 2 คันเพื่อเริ่มเปรียบเทียบสเปก</td></tr>';
+    return;
+  }
+
+  const car1 = carSpecsList.find(x => x.id == id1);
+  const car2 = carSpecsList.find(x => x.id == id2);
+  if (!car1 || !car2) return;
+
+  th1.innerText = `${car1.brand_model} - ${car1.trim_name}`;
+  th2.innerText = `${car2.brand_model} - ${car2.trim_name}`;
+
+  const currentYear = new Date().getFullYear();
+  const age1 = currentYear - (car1.production_year || currentYear);
+  const age2 = currentYear - (car2.production_year || currentYear);
+
+  const price1Str = car1.price ? '฿' + nf.format(car1.price) : 'ไม่ระบุ';
+  const price2Str = car2.price ? '฿' + nf.format(car2.price) : 'ไม่ระบุ';
+
+  const web1Str = car1.website_url ? `<a href="${car1.website_url}" target="_blank" style="color:var(--accent);">🔗 เว็บไซต์ทางการ</a>` : '—';
+  const web2Str = car2.website_url ? `<a href="${car2.website_url}" target="_blank" style="color:var(--accent);">🔗 เว็บไซต์ทางการ</a>` : '—';
+
+  const made1Str = car1.made_in_thailand !== false ? '🇹🇭 ผลิตในไทย' : '🌐 นำเข้า';
+  const made2Str = car2.made_in_thailand !== false ? '🇹🇭 ผลิตในไทย' : '🌐 นำเข้า';
+
+  const rows = [
+    { title: '💰 ราคาจำหน่าย', val1: price1Str, val2: price2Str, raw1: car1.price || 0, raw2: car2.price || 0, type: 'price' },
+    { title: '🌐 เว็บไซต์ทางการ', val1: web1Str, val2: web2Str },
+    { title: '🏭 แหล่งผลิต', val1: made1Str, val2: made2Str },
+    { title: '📅 ปีที่ผลิต / อายุรุ่น', val1: `${car1.production_year || '-'} (${age1 === 0 ? 'ปีแรก' : age1 + ' ปี'})`, val2: `${car2.production_year || '-'} (${age2 === 0 ? 'ปีแรก' : age2 + ' ปี'})` },
+    { title: '🔋 ประเภทแบตเตอรี่', val1: car1.battery_chem || '-', val2: car2.battery_chem || '-' },
+    { title: '⚙️ เทคโนโลยีแบตเตอรี่', val1: car1.battery_tech || '-', val2: car2.battery_tech || '-' },
+    { title: '⚡ พละกำลังสูงสุด', val1: car1.power_detail || '-', val2: car2.power_detail || '-' },
+    { title: '🔄 แรงบิดสูงสุด', val1: car1.torque_val || '-', val2: car2.torque_val || '-' },
+    { title: '🔋 ความจุแบตเตอรี่', val1: car1.battery_val || '-', val2: car2.battery_val || '-' },
+    { title: '🛣️ ระยะทางวิ่งสูงสุด', val1: car1.range_detail || '-', val2: car2.range_detail || '-' },
+    { title: '⏱️ อัตราเร่ง 0-100 กม./ชม.', val1: car1.acc_val || '-', val2: car2.acc_val || '-' },
+    { title: '🔌 ชาร์จเร็ว DC (Max)', val1: car1.dc_kw || '-', val2: car2.dc_kw || '-' },
+    { title: '🏠 ชาร์จไฟบ้าน AC', val1: car1.ac_kw || '-', val2: car2.ac_kw || '-' },
+    { title: '⚙️ ระบบขับเคลื่อน', val1: car1.drive_type || '-', val2: car2.drive_type || '-' }
+  ];
+
+  let html = '';
+  rows.forEach(r => {
+    let highlight1 = '';
+    let highlight2 = '';
+
+    if (r.type === 'price' && r.raw1 > 0 && r.raw2 > 0) {
+      if (r.raw1 < r.raw2) highlight1 = 'background: var(--pos-bg); color: var(--pos); font-weight: 800;';
+      else if (r.raw2 < r.raw1) highlight2 = 'background: var(--pos-bg); color: var(--pos); font-weight: 800;';
+    }
+
+    html += `
+      <tr>
+        <td><b>${r.title}</b></td>
+        <td style="${highlight1}">${r.val1}</td>
+        <td style="${highlight2}">${r.val2}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
 }
 
 // ---------------------------------------------------------
@@ -1001,6 +1150,7 @@ async function loadCarSpecsData() {
     }
 
     renderCarDetails(selectedCarModel);
+    populateComparisonDropdowns();
   } catch (err) {
     console.error('Error loading car specs:', err.message);
   }
@@ -1048,7 +1198,6 @@ function selectTrimById(id, btnElement) {
 
   document.getElementById('specPrice').innerText = trimData.price ? '฿' + nf.format(trimData.price) : 'ระบุราคาเร็วๆ นี้';
   
-  // Link Website
   const webUrl = trimData.website_url ? trimData.website_url.trim() : '';
   if (webUrl) {
     document.getElementById('specWebsite').innerHTML = `<a href="${webUrl}" target="_blank" style="color: var(--accent); text-decoration: underline;">🔗 เยี่ยมชมเว็บไซต์ทางการ</a>`;
@@ -1056,13 +1205,11 @@ function selectTrimById(id, btnElement) {
     document.getElementById('specWebsite').innerText = '—';
   }
 
-  // แหล่งผลิตในไทย
   const isThaiMade = trimData.made_in_thailand !== false;
   document.getElementById('specMadeIn').innerHTML = isThaiMade 
     ? '<span class="badge badge-pos">🇹🇭 ผลิตภายในประเทศไทย (Made in Thailand)</span>' 
     : '<span class="badge badge-neutral">🌐 นำเข้าจากต่างประเทศ (Imported)</span>';
 
-  // คำนวณอายุของรุ่นรถจากปีที่ผลิต
   const prodYear = trimData.production_year || new Date().getFullYear();
   const currentYear = new Date().getFullYear();
   const carAge = currentYear - prodYear;
