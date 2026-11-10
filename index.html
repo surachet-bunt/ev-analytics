@@ -335,8 +335,69 @@ body{
     </div>
   </div>
 
-  <!-- TAB 2: ตลาด EV ประเทศไทย -->
+  <!-- TAB 2: ตลาด EV ประเทศไทย (ดึงข้อมูลสะสมจากตารางแยกต่างหาก) -->
   <div id="sectionExternal" class="tab-section hide">
+    
+    <!-- ส่วนข้อมูลสะสมภาพรวม (ดึงจาก ev_market_summary) -->
+    <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">📈 ภาพรวมยอดจดทะเบียนสะสมรถยนต์ไฟฟ้าในประเทศไทย</h3>
+          <p style="font-size: 12px; color: var(--mute);">ข้อมูลสถิติสะสมภาพรวมจากตารางแยกต่างหากที่คุณอัปเดตเอง</p>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="openSummaryModal()">＋ จัดการข้อมูลสะสม</button>
+        </div>
+      </div>
+
+      <div class="bento-top" style="margin-bottom: 20px;">
+        <div class="card card-kpi-1" style="background: var(--surface);">
+          <div class="kpi-header">
+            <div>
+              <div class="kpi-label">ยอดสะสมรวมล่าสุด</div>
+              <div id="sum-total-units" class="kpi-val" style="color: #3b82f6;">-</div>
+            </div>
+            <div class="kpi-icon" style="background: #3b82f6;">📊</div>
+          </div>
+          <div id="sum-total-note" style="font-size:11px; color:var(--mute); margin-top:8px;">—</div>
+        </div>
+
+        <div class="card card-kpi-2" style="background: var(--surface);">
+          <div class="kpi-header">
+            <div>
+              <div class="kpi-label">อัตราเติบโต YTD</div>
+              <div id="sum-ytd-growth" class="kpi-val" style="color: #f59e0b;">-</div>
+            </div>
+            <div class="kpi-icon" style="background: #f59e0b;">🚀</div>
+          </div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">เทียบกับช่วงเดียวกันปีก่อน</div>
+        </div>
+
+        <div class="card card-kpi-3" style="background: var(--surface);">
+          <div class="kpi-header">
+            <div>
+              <div class="kpi-label">เดือน/ปี ล่าสุด</div>
+              <div id="sum-latest-period" class="kpi-val" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
+            </div>
+            <div class="kpi-icon" style="background: #10b981;">🗓️</div>
+          </div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">งวดข้อมูลสะสมปัจจุบัน</div>
+        </div>
+
+        <div class="card card-kpi-4" style="background: var(--surface);">
+          <div class="kpi-header">
+            <div>
+              <div class="kpi-label">สถานะฐานข้อมูลสะสม</div>
+              <div class="kpi-val" style="color: #8b5cf6; font-size: 18px; margin-top: 14px;">Connected</div>
+            </div>
+            <div class="kpi-icon" style="background: #8b5cf6;">⚡</div>
+          </div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">ตาราง ev_market_summary</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ส่วนเดิม: ตลาด EV ประเทศไทยรายเดือน (Top 10) -->
     <div class="card" style="margin-bottom: 24px;">
       <div class="filter-bar" style="margin-bottom: 20px;">
         <div>
@@ -540,11 +601,9 @@ body{
     </div>
   </div>
 
-  <!-- TAB 4: สเปกและข้อมูลรถ (Car Detail & Specs) -->
+  <!-- TAB 4: สเปกและข้อมูลรถ -->
   <div id="sectionCarDetail" class="tab-section hide">
     <div class="car-detail-container">
-      
-      <!-- Toolbar เลือกเลือกรุ่นรถ และจัดการข้อมูล -->
       <div class="card" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
           <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--mute);">🚗 เลือกรุ่นรถ:</label>
@@ -559,7 +618,6 @@ body{
         </div>
       </div>
 
-      <!-- Hero Banner & Top Specs -->
       <div class="car-hero-card">
         <div id="heroBgImage" class="car-hero-bg" style="background-image: url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1200&auto=format&fit=crop');"></div>
         <div class="car-hero-content">
@@ -592,14 +650,10 @@ body{
         </div>
       </div>
 
-      <!-- Model / Trim Selector -->
       <div class="card">
         <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">🎛️ เลือกรุ่นย่อย (Model Trims)</h3>
-        <div id="trimButtonsContainer" class="trim-selector">
-          <!-- สร้างปุ่ม Trim อัตโนมัติ -->
-        </div>
+        <div id="trimButtonsContainer" class="trim-selector"></div>
 
-        <!-- Detailed Specs List -->
         <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; margin-top: 24px;">📋 ข้อมูลจำเพาะทางเทคนิคเชิงลึก</h3>
         <div class="spec-list-card" style="background: var(--surface-sub);">
           <div class="spec-row">
@@ -660,11 +714,10 @@ body{
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- TAB 5: เปรียบเทียบสเปกแบบตัวต่อตัว (Side-by-Side Comparison) -->
+  <!-- TAB 5: เปรียบเทียบสเปก -->
   <div id="sectionCompare" class="tab-section hide">
     <div class="card" style="margin-bottom: 24px;">
       <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">⚖️ เปรียบเทียบสเปกรถยนต์ไฟฟ้า (Side-by-Side Comparison)</h3>
@@ -673,7 +726,7 @@ body{
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px;">
         <div class="card" style="background: var(--surface-sub); padding: 20px;">
           <div class="input-group">
-            <label>🚗 เลือกรถรุ่นที่ 1 (Car A)</label>
+            <label>🚗 เลือกรุ่นรถที่ 1 (Car A)</label>
             <select id="compareCar1" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
               <option value="">-- เลือกรุ่นรถ --</option>
             </select>
@@ -681,7 +734,7 @@ body{
         </div>
         <div class="card" style="background: var(--surface-sub); padding: 20px;">
           <div class="input-group">
-            <label>🚗 เลือกรถรุ่นที่ 2 (Car B)</label>
+            <label>🚗 เลือกรุ่นรถที่ 2 (Car B)</label>
             <select id="compareCar2" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
               <option value="">-- เลือกรุ่นรถ --</option>
             </select>
@@ -706,6 +759,40 @@ body{
     </div>
   </div>
 
+</div>
+
+<!-- Modal จัดการข้อมูลสะสม (ev_market_summary) -->
+<div id="summaryModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+  <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">จัดการข้อมูลยอดสะสมตลาด EV</h3>
+  <form id="summaryForm" onsubmit="handleSummaryFormSubmit(event)">
+    <input type="hidden" id="sumId">
+    <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+      <div class="input-group">
+        <label>ปี ค.ศ. (Year) *</label>
+        <input type="number" id="sumYear" required value="2026">
+      </div>
+      <div class="input-group">
+        <label>เดือน (Month) *</label>
+        <input type="text" id="sumMonth" required placeholder="เช่น กันยายน">
+      </div>
+      <div class="input-group">
+        <label>ยอดสะสมรวม (Cumulative Units) *</label>
+        <input type="number" id="sumUnits" required min="0" placeholder="เช่น 110002">
+      </div>
+      <div class="input-group">
+        <label>อัตราเติบโต YTD (%)</label>
+        <input type="number" id="sumGrowth" step="0.01" placeholder="เช่น 25.5">
+      </div>
+      <div class="input-group">
+        <label>หมายเหตุ / แหล่งอ้างอิง</label>
+        <input type="text" id="sumNote" placeholder="เช่น อ้างอิงสถิติกระทรวงพลังงาน">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-primary">💾 บันทึกข้อมูลสะสม</button>
+      <button type="button" class="btn" onclick="closeSummaryModal()">ยกเลิก</button>
+    </div>
+  </form>
 </div>
 
 <!-- Modal สำหรับ เพิ่ม/แก้ไข สเปกรถ -->
@@ -856,6 +943,7 @@ let currentExternalItems = [];
 let carSpecsList = [];
 let selectedCarModel = '';
 let selectedTrimId = null;
+let currentSummaryId = null;
 const nf = new Intl.NumberFormat('en-US');
 
 const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
@@ -939,7 +1027,75 @@ function switchTab(target) {
 }
 
 // ---------------------------------------------------------
-// ระบบเปรียบเทียบสเปกรถแบบตัวต่อตัว (Side-by-Side Comparison)
+// จัดการข้อมูลสะสม (ev_market_summary)
+// ---------------------------------------------------------
+async function loadMarketSummary() {
+  try {
+    const { data, error } = await db.from('ev_market_summary').select('*').order('id', { ascending: false }).limit(1);
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const item = data[0];
+      currentSummaryId = item.id;
+      document.getElementById('sum-total-units').innerText = nf.format(item.cumulative_units) + ' คัน';
+      document.getElementById('sum-total-note').innerText = item.note || 'อัปเดตจากฐานข้อมูลสะสม';
+      document.getElementById('sum-ytd-growth').innerText = item.ytd_growth != null ? (item.ytd_growth >= 0 ? '+' + item.ytd_growth + '%' : item.ytd_growth + '%') : '—';
+      document.getElementById('sum-latest-period').innerText = `${item.month_name} ${item.year}`;
+
+      // เก็บค่าไว้ใส่ฟอร์มตอนกดแก้ไข
+      document.getElementById('sumYear').value = item.year;
+      document.getElementById('sumMonth').value = item.month_name;
+      document.getElementById('sumUnits').value = item.cumulative_units;
+      document.getElementById('sumGrowth').value = item.ytd_growth || '';
+      document.getElementById('sumNote').value = item.note || '';
+    } else {
+      document.getElementById('sum-total-units').innerText = 'ยังไม่มีข้อมูล';
+      document.getElementById('sum-ytd-growth').innerText = '—';
+      document.getElementById('sum-latest-period').innerText = '—';
+      document.getElementById('sum-total-note').innerText = 'กรุณากดจัดการข้อมูลสะสมเพื่อเพิ่มตัวเลข';
+    }
+  } catch (err) {
+    console.error('Error loading summary:', err.message);
+  }
+}
+
+function openSummaryModal() {
+  document.getElementById('summaryModal').classList.remove('hide');
+}
+
+function closeSummaryModal() {
+  document.getElementById('summaryModal').classList.add('hide');
+}
+
+async function handleSummaryFormSubmit(e) {
+  e.preventDefault();
+  const payload = {
+    year: Number(document.getElementById('sumYear').value),
+    month_name: document.getElementById('sumMonth').value.trim(),
+    cumulative_units: Number(document.getElementById('sumUnits').value),
+    ytd_growth: document.getElementById('sumGrowth').value ? Number(document.getElementById('sumGrowth').value) : null,
+    note: document.getElementById('sumNote').value.trim()
+  };
+
+  try {
+    if (currentSummaryId) {
+      const { error } = await db.from('ev_market_summary').update(payload).eq('id', currentSummaryId);
+      if (error) throw error;
+    } else {
+      const { error } = await db.from('ev_market_summary').insert([payload]);
+      if (error) throw error;
+    }
+
+    closeSummaryModal();
+    loadMarketSummary();
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกข้อมูลสะสมสำเร็จ', showConfirmButton:false, timer:1500});
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
+  }
+}
+
+// ---------------------------------------------------------
+// ระบบเปรียบเทียบสเปก (Side-by-Side Comparison)
 // ---------------------------------------------------------
 function populateComparisonDropdowns() {
   const sel1 = document.getElementById('compareCar1');
@@ -1120,300 +1276,10 @@ async function deleteExtRecord(id) {
   });
 }
 
-// ---------------------------------------------------------
-// จัดการข้อมูลสเปกรถยนต์ไฟฟ้า (Supabase Car Specs)
-// ---------------------------------------------------------
-async function loadCarSpecsData() {
-  try {
-    const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
-    if (error) throw error;
-    
-    carSpecsList = data || [];
-    const selectEl = document.getElementById('carModelSelect');
-    
-    if (carSpecsList.length === 0) {
-      selectEl.innerHTML = '<option value="">-- ไม่พบข้อมูลรถในระบบ --</option>';
-      return;
-    }
-
-    const uniqueModels = [...new Set(carSpecsList.map(item => item.brand_model))];
-    let optHtml = '';
-    uniqueModels.forEach(model => {
-      const isSel = model === selectedCarModel ? 'selected' : '';
-      optHtml += `<option value="${model}" ${isSel}>${model}</option>`;
-    });
-    selectEl.innerHTML = optHtml;
-
-    if (!selectedCarModel || !uniqueModels.includes(selectedCarModel)) {
-      selectedCarModel = uniqueModels[0];
-      selectEl.value = selectedCarModel;
-    }
-
-    renderCarDetails(selectedCarModel);
-    populateComparisonDropdowns();
-  } catch (err) {
-    console.error('Error loading car specs:', err.message);
-  }
-}
-
-function onCarModelChanged() {
-  const selectEl = document.getElementById('carModelSelect');
-  selectedCarModel = selectEl.value;
-  renderCarDetails(selectedCarModel);
-}
-
-function renderCarDetails(modelName) {
-  const modelTrims = carSpecsList.filter(item => item.brand_model === modelName);
-  if (modelTrims.length === 0) return;
-
-  const trimContainer = document.getElementById('trimButtonsContainer');
-  let trimHtml = '';
-  modelTrims.forEach((trim, idx) => {
-    const activeClass = idx === 0 ? 'active' : '';
-    trimHtml += `<button class="trim-btn ${activeClass}" onclick='selectTrimById(${trim.id}, this)'>${trim.trim_name}</button>`;
-  });
-  trimContainer.innerHTML = trimHtml;
-
-  selectTrimById(modelTrims[0].id, trimContainer.querySelector('.trim-btn'));
-}
-
-function selectTrimById(id, btnElement) {
-  document.querySelectorAll('.trim-btn').forEach(b => b.classList.remove('active'));
-  if (btnElement) btnElement.classList.add('active');
-
-  const trimData = carSpecsList.find(item => item.id === id);
-  if (!trimData) return;
-
-  selectedTrimId = trimData.id;
-
-  document.getElementById('heroCarTitle').innerText = `${trimData.brand_model} - ${trimData.trim_name}`;
-  document.getElementById('heroRange').innerText = trimData.range_val;
-  document.getElementById('heroPower').innerText = trimData.power_val;
-  document.getElementById('heroAcc').innerText = trimData.acc_val;
-  document.getElementById('heroDc').innerText = trimData.dc_time;
-
-  if (trimData.banner_img) {
-    document.getElementById('heroBgImage').style.backgroundImage = `url('${trimData.banner_img}')`;
-  }
-
-  document.getElementById('specPrice').innerText = trimData.price ? '฿' + nf.format(trimData.price) : 'ระบุราคาเร็วๆ นี้';
-  
-  const webUrl = trimData.website_url ? trimData.website_url.trim() : '';
-  if (webUrl) {
-    document.getElementById('specWebsite').innerHTML = `<a href="${webUrl}" target="_blank" style="color: var(--accent); text-decoration: underline;">🔗 เยี่ยมชมเว็บไซต์ทางการ</a>`;
-  } else {
-    document.getElementById('specWebsite').innerText = '—';
-  }
-
-  const isThaiMade = trimData.made_in_thailand !== false;
-  document.getElementById('specMadeIn').innerHTML = isThaiMade 
-    ? '<span class="badge badge-pos">🇹🇭 ผลิตภายในประเทศไทย (Made in Thailand)</span>' 
-    : '<span class="badge badge-neutral">🌐 นำเข้าจากต่างประเทศ (Imported)</span>';
-
-  const prodYear = trimData.production_year || new Date().getFullYear();
-  const currentYear = new Date().getFullYear();
-  const carAge = currentYear - prodYear;
-  let ageText = carAge === 0 ? 'ปีแรก (เปิดตัวปีนี้)' : `${carAge} ปี (ผลิตปี ${prodYear})`;
-
-  document.getElementById('specProdYear').innerText = prodYear;
-  document.getElementById('specCarAge').innerText = ageText;
-  document.getElementById('specBatteryChem').innerText = trimData.battery_chem || '-';
-  document.getElementById('specBatteryTech').innerText = trimData.battery_tech || '-';
-
-  document.getElementById('specPower').innerText = trimData.power_detail;
-  document.getElementById('specTorque').innerText = trimData.torque_val;
-  document.getElementById('specBattery').innerText = trimData.battery_val;
-  document.getElementById('specRange').innerText = trimData.range_detail;
-  document.getElementById('specDcKw').innerText = trimData.dc_kw;
-  document.getElementById('specAcKw').innerText = trimData.ac_kw;
-  document.getElementById('specDrive').innerText = trimData.drive_type;
-}
-
-function openCarModal(mode) {
-  const modal = document.getElementById('carModal');
-  modal.classList.remove('hide');
-  document.getElementById('carSpecForm').reset();
-  document.getElementById('carId').value = '';
-
-  if (mode === 'edit' && selectedTrimId) {
-    const trimData = carSpecsList.find(item => item.id === selectedTrimId);
-    if (trimData) {
-      document.getElementById('carModalTitle').innerText = `แก้ไขสเปก: ${trimData.brand_model} (${trimData.trim_name})`;
-      document.getElementById('carId').value = trimData.id;
-      document.getElementById('mBrandModel').value = trimData.brand_model;
-      document.getElementById('mTrimName').value = trimData.trim_name;
-      document.getElementById('mPrice').value = trimData.price || '';
-      document.getElementById('mWebsiteUrl').value = trimData.website_url || '';
-      document.getElementById('mMadeInThailand').value = trimData.made_in_thailand !== false ? 'true' : 'false';
-      document.getElementById('mProdYear').value = trimData.production_year || 2026;
-      document.getElementById('mBatteryChem').value = trimData.battery_chem || '';
-      document.getElementById('mBatteryTech').value = trimData.battery_tech || '';
-      document.getElementById('mRangeVal').value = trimData.range_val;
-      document.getElementById('mPowerVal').value = trimData.power_val;
-      document.getElementById('mAccVal').value = trimData.acc_val;
-      document.getElementById('mDcTime').value = trimData.dc_time;
-      document.getElementById('mPowerDetail').value = trimData.power_detail;
-      document.getElementById('mTorqueVal').value = trimData.torque_val;
-      document.getElementById('mBatteryVal').value = trimData.battery_val;
-      document.getElementById('mRangeDetail').value = trimData.range_detail;
-      document.getElementById('mDcKw').value = trimData.dc_kw;
-      document.getElementById('mAcKw').value = trimData.ac_kw;
-      document.getElementById('mDriveType').value = trimData.drive_type;
-      document.getElementById('mBannerImg').value = trimData.banner_img || '';
-    }
-  } else {
-    document.getElementById('carModalTitle').innerText = 'เพิ่มข้อมูลสเปกรถยนต์ไฟฟ้า';
-    document.getElementById('mProdYear').value = new Date().getFullYear();
-    document.getElementById('mMadeInThailand').value = 'true';
-  }
-}
-
-function closeCarModal() {
-  document.getElementById('carModal').classList.add('hide');
-}
-
-async function handleCarFormSubmit(e) {
-  e.preventDefault();
-  const id = document.getElementById('carId').value;
-  const payload = {
-    brand_model: document.getElementById('mBrandModel').value.trim(),
-    trim_name: document.getElementById('mTrimName').value.trim(),
-    price: Number(document.getElementById('mPrice').value) || 0,
-    website_url: document.getElementById('mWebsiteUrl').value.trim(),
-    made_in_thailand: document.getElementById('mMadeInThailand').value === 'true',
-    production_year: Number(document.getElementById('mProdYear').value) || 2026,
-    battery_chem: document.getElementById('mBatteryChem').value.trim(),
-    battery_tech: document.getElementById('mBatteryTech').value.trim(),
-    range_val: document.getElementById('mRangeVal').value.trim(),
-    power_val: document.getElementById('mPowerVal').value.trim(),
-    acc_val: document.getElementById('mAccVal').value.trim(),
-    dc_time: document.getElementById('mDcTime').value.trim(),
-    power_detail: document.getElementById('mPowerDetail').value.trim(),
-    torque_val: document.getElementById('mTorqueVal').value.trim(),
-    battery_val: document.getElementById('mBatteryVal').value.trim(),
-    range_detail: document.getElementById('mRangeDetail').value.trim(),
-    dc_kw: document.getElementById('mDcKw').value.trim(),
-    ac_kw: document.getElementById('mAcKw').value.trim(),
-    drive_type: document.getElementById('mDriveType').value.trim(),
-    banner_img: document.getElementById('mBannerImg').value.trim()
-  };
-
-  try {
-    if (id) {
-      const { error } = await db.from('car_specs').update(payload).eq('id', Number(id));
-      if (error) throw error;
-    } else {
-      const { error } = await db.from('car_specs').insert([payload]);
-      if (error) throw error;
-    }
-
-    selectedCarModel = payload.brand_model;
-    closeCarModal();
-    loadCarSpecsData();
-    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสเปกรถสำเร็จ', showConfirmButton:false, timer:1500});
-  } catch (err) {
-    Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
-  }
-}
-
-async function deleteCurrentCar() {
-  if (!selectedTrimId) return;
-  const trimData = carSpecsList.find(item => item.id === selectedTrimId);
-  if (!trimData) return;
-
-  Swal.fire({
-    title: `ยืนยันลบรุ่นย่อย ${trimData.brand_model} (${trimData.trim_name})?`,
-    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
-    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
-  }).then(async res => {
-    if (res.isConfirmed) {
-      try {
-        const { error } = await db.from('car_specs').delete().eq('id', selectedTrimId);
-        if (error) throw error;
-        loadCarSpecsData();
-        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลสำเร็จ', showConfirmButton:false, timer:1500});
-      } catch (err) {
-        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
-      }
-    }
-  });
-}
-
-function calculateCostComparison() {
-  const dist = parseFloat(document.getElementById('calcDistance').value) || 0;
-  const kmPerLiter = parseFloat(document.getElementById('calcFuelKmPerLiter').value) || 1;
-  const evKwhPerKm = parseFloat(document.getElementById('calcEvKwhPerKm').value) || 0.1;
-
-  const pGasoline = parseFloat(document.getElementById('calcPriceGasoline').value) || 0;
-  const pDiesel = parseFloat(document.getElementById('calcPriceDiesel').value) || 0;
-  const pEvHome = parseFloat(document.getElementById('calcPriceEvHome').value) || 0;
-  const pEvStation = parseFloat(document.getElementById('calcPriceEvStation').value) || 0;
-
-  document.getElementById('lblDistTitle').innerText = nf.format(dist);
-
-  const costGasoline = (dist / kmPerLiter) * pGasoline;
-  const costDiesel = (dist / kmPerLiter) * pDiesel;
-  const totalKwh = dist * evKwhPerKm;
-  const costEvHome = totalKwh * pEvHome;
-  const costEvStation = totalKwh * pEvStation;
-
-  const perKmGasoline = costGasoline / (dist || 1);
-  const perKmDiesel = costDiesel / (dist || 1);
-  const perKmEvHome = costEvHome / (dist || 1);
-  const perKmEvStation = costEvStation / (dist || 1);
-
-  document.getElementById('res-gasoline').innerText = '฿' + nf.format(costGasoline.toFixed(2));
-  document.getElementById('unit-gasoline').innerText = `เฉลี่ย ${perKmGasoline.toFixed(2)} บาท / กม.`;
-
-  document.getElementById('res-ev-home').innerText = '฿' + nf.format(costEvHome.toFixed(2));
-  document.getElementById('unit-ev-home').innerText = `เฉลี่ย ${perKmEvHome.toFixed(2)} บาท / กม.`;
-
-  document.getElementById('res-ev-station').innerText = '฿' + nf.format(costEvStation.toFixed(2));
-  document.getElementById('unit-ev-station').innerText = `เฉลี่ย ${perKmEvStation.toFixed(2)} บาท / กม.`;
-
-  const savingAmount = costGasoline - costEvHome;
-  const savingPercent = costGasoline > 0 ? ((savingAmount / costGasoline) * 100).toFixed(0) : 0;
-  document.getElementById('res-saving').innerText = '฿' + nf.format(savingAmount.toFixed(2));
-
-  let html = `
-    <tr>
-      <td><b>⛽ น้ำมันแก๊สโซฮอล์ 95</b></td>
-      <td>${pGasoline.toFixed(2)} บาท/ลิตร</td>
-      <td>${kmPerLiter} กม./ลิตร</td>
-      <td><b style="color: #f59e0b; font-size: 14px;">฿${nf.format(costGasoline.toFixed(2))}</b></td>
-      <td>${perKmGasoline.toFixed(2)} บาท</td>
-      <td><span class="badge badge-neutral">เกณฑ์มาตรฐาน</span></td>
-    </tr>
-    <tr>
-      <td><b>🛢️ น้ำมันดีเซล (B7)</b></td>
-      <td>${pDiesel.toFixed(2)} บาท/ลิตร</td>
-      <td>${kmPerLiter} กม./ลิตร</td>
-      <td><b style="font-size: 14px;">฿${nf.format(costDiesel.toFixed(2))}</b></td>
-      <td>${perKmDiesel.toFixed(2)} บาท</td>
-      <td><span class="badge badge-neutral">—</span></td>
-    </tr>
-    <tr>
-      <td><b>🏠 ชาร์จไฟบ้าน EV (TOU Off-Peak)</b></td>
-      <td>${pEvHome.toFixed(2)} บาท/หน่วย</td>
-      <td>${evKwhPerKm} kWh/กม.</td>
-      <td><b style="color: #3b82f6; font-size: 14px;">฿${nf.format(costEvHome.toFixed(2))}</b></td>
-      <td>${perKmEvHome.toFixed(2)} บาท</td>
-      <td><span class="badge badge-pos">ประหยัดกว่า ${savingPercent}% (฿${nf.format(savingAmount.toFixed(2))})</span></td>
-    </tr>
-    <tr>
-      <td><b>🔌 ชาร์จสถานีสาธารณะ (DC Fast Charge)</b></td>
-      <td>${pEvStation.toFixed(2)} บาท/หน่วย</td>
-      <td>${evKwhPerKm} kWh/กม.</td>
-      <td><b style="color: #10b981; font-size: 14px;">฿${nf.format(costEvStation.toFixed(2))}</b></td>
-      <td>${perKmEvStation.toFixed(2)} บาท</td>
-      <td><span class="badge badge-pos">ประหยัดกว่า ${Math.max(0, ((costGasoline - costEvStation) / costGasoline * 100)).toFixed(0)}%</span></td>
-    </tr>
-  `;
-  document.getElementById('calcTableBody').innerHTML = html;
-}
-
 async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
+  loadMarketSummary(); // โหลดข้อมูลสะสมจากตารางแยก
+
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
     if (error) throw error;
@@ -2113,6 +1979,16 @@ async function openAddColumnModal() {
       }
     }
   });
+}
+
+// โหลดข้อมูลสเปกรถเบื้องต้น
+async function loadCarSpecsData() {
+  try {
+    const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
+    if (error) throw error;
+    carSpecsList = data || [];
+    populateComparisonDropdowns();
+  } catch (err) { console.error(err); }
 }
 </script>
 </body>
