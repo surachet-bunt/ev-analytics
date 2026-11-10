@@ -997,6 +997,7 @@ window.addEventListener('DOMContentLoaded', () => {
   calculateCostComparison();
   loadCarSpecsData();
   loadMarketSummary();
+  loadExternalMarketData(); // แก้ไขเรียกโหลดข้อมูลตลาดภายนอกอัตโนมัติ
 });
 
 function toggleTheme() {
@@ -1409,6 +1410,242 @@ async function deleteSummaryRecord(id) {
       }
     }
   });
+}
+
+// ---------------------------------------------------------
+// จัดการข้อมูลตลาด EV ประเทศไทย (External Market Management)
+// ---------------------------------------------------------
+async function loadExternalMarketData(selectedMonth, selectedYear) {
+  document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
+
+  try {
+    const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
+    if (error) throw error;
+
+    if (!res || res.length === 0) {
+      document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
+      return;
+    }
+
+    const allRows = res.map(r => ({
+      id: r.id,
+      year: r.year,
+      month: r.month.trim(),
+      rank: r.rank,
+      brand: r.brand,
+      units: r.units,
+      evType: r.ev_type
+    }));
+
+    const monthYearSet = new Set();
+    allRows.forEach(r => {
+      monthYearSet.add(r.month);
+    });
+    const availableMonths = Array.from(monthYearSet);
+
+    let targetMonth = selectedMonth;
+    if (!targetMonth) {
+      if (availableMonths.length > 0) {
+        targetMonth = availableMonths[availableMonths.length - 1];
+      }
+    }
+
+    let filteredItems = allRows.filter(i => i.month.toLowerCase() === targetMonth.toLowerCase());
+    filteredItems.sort((a, b) => a.rank - b.rank);
+    const top10Items = filteredItems;
+
+    const totalMonth = top10Items.reduce((sum, i) => sum + i.units, 0);
+    const topBrand = top10Items.length > 0 ? top10Items[0].brand : '-';
+
+    externalLoaded = true;
+    currentExternalItems = top10Items;
+    
+    document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth}`;
+    document.getElementById('ext-stat-month').innerText = nf.format(totalMonth) + ' คัน';
+    document.getElementById('ext-stat-topbrand').innerText = topBrand;
+    document.getElementById('ext-stat-gainer').innerText = top10Items.length > 1 ? `${top10Items[1].brand} (รองแชมป์)` : '-';
+
+    const selectEl = document.getElementById('selectMonthYear');
+    if (selectEl) {
+      let optHtml = '';
+      availableMonths.forEach(m => {
+        const isSelected = m.toLowerCase() === targetMonth.toLowerCase() ? 'selected' : '';
+        optHtml += `<option value="${m}" ${isSelected}>${m}</option>`;
+      });
+      selectEl.innerHTML = optHtml;
+    }
+
+    let html = '';
+    const totalTop10 = totalMonth || 1;
+    const chartLabels = [];
+    const chartData = [];
+
+    top10Items.forEach((item) => {
+      const rank = item.rank;
+      const rankBadge = rank <= 3 ? `<span class="badge badge-pos">#${rank}</span>` : `<span class="badge badge-neutral">#${rank}</span>`;
+      const marketShare = ((item.units / totalTop10) * 100).toFixed(1) + '%';
+      
+      chartLabels.push(item.brand);
+      chartData.push(item.units);
+
+      html += `
+        <tr>
+          <td><b>${rankBadge}</b></td>
+          <td><b style="color: var(--accent); font-size: 14px;">${item.brand}</b></td>
+          <td><b>${nf.format(item.units)}</b></td>
+          <td><span style="font-weight:700; color:var(--mute);">${marketShare}</span></td>
+          <td><span class="badge badge-neutral">—</span></td>
+          <td>${item.month}</td>
+          <td>
+            <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openExtModal('edit', ${item.id})">แก้ไข</button>
+            <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteExtRecord(${item.id})">ลบ</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('externalTableBody').innerHTML = html;
+    renderExtMarketChart(chartLabels, chartData);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function onChangeExternalFilter() {
+  const val = document.getElementById('selectMonthYear').value;
+  if (!val) return;
+  loadExternalMarketData(val);
+}
+
+function renderExtMarketChart(labels, data) {
+  if(!window.Chart) return;
+  if(extMarketChartInstance) extMarketChartInstance.destroy();
+
+  const ctx = document.getElementById('extMarketChart').getContext('2d');
+  extMarketChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { 
+        legend: { 
+          position: 'right',
+          labels: { color: document.documentElement.dataset.theme === 'dark' ? '#9ca3af' : '#64748b', boxWidth: 10, font: { size: 11, weight: '700' } } 
+        } 
+      },
+      cutout: '68%'
+    }
+  });
+}
+
+function openExtModal(mode, id = null) {
+  const modal = document.getElementById('extModal');
+  modal.classList.remove('hide');
+  document.getElementById('extSpecForm').reset();
+  document.getElementById('extId').value = '';
+
+  if (mode === 'edit' && id) {
+    const item = currentExternalItems.find(x => x.id === id);
+    if (item) {
+      document.getElementById('extModalTitle').innerText = `แก้ไขข้อมูล: ${item.brand}`;
+      document.getElementById('extId').value = item.id;
+      document.getElementById('extYear').value = item.year;
+      document.getElementById('extMonth').value = item.month;
+      document.getElementById('extRank').value = item.rank;
+      document.getElementById('extBrand').value = item.brand;
+      document.getElementById('extUnits').value = item.units;
+    }
+  } else {
+    document.getElementById('extModalTitle').innerText = 'เพิ่มข้อมูลตลาด EV ประเทศไทย';
+    const selVal = document.getElementById('selectMonthYear').value;
+    document.getElementById('extMonth').value = selVal || 'AUG 2026';
+    document.getElementById('extYear').value = 2026;
+  }
+}
+
+function closeExtModal() {
+  document.getElementById('extModal').classList.add('hide');
+}
+
+async function handleExtFormSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('extId').value;
+  const payload = {
+    year: Number(document.getElementById('extYear').value),
+    month: document.getElementById('extMonth').value.trim(),
+    rank: Number(document.getElementById('extRank').value),
+    brand: document.getElementById('extBrand').value.trim(),
+    units: Number(document.getElementById('extUnits').value),
+    ev_type: 'BEV'
+  };
+
+  try {
+    if (id) {
+      const { error } = await db.from('external_ev_market').update(payload).eq('id', Number(id));
+      if (error) throw error;
+    } else {
+      const { error } = await db.from('external_ev_market').insert([payload]);
+      if (error) throw error;
+    }
+
+    closeExtModal();
+    loadExternalMarketData(payload.month);
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกข้อมูลตลาดสำเร็จ', showConfirmButton:false, timer:1500});
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
+  }
+}
+
+async function deleteExtRecord(id) {
+  Swal.fire({
+    title: 'ยืนยันการลบรายการนี้?',
+    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
+    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
+  }).then(async result => {
+    if(result.isConfirmed) {
+      try {
+        const { error } = await db.from('external_ev_market').delete().eq('id', Number(id));
+        if (error) throw error;
+        loadExternalMarketData();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
+    }
+  });
+}
+
+function exportExternalCSV() {
+  if (!currentExternalItems || currentExternalItems.length === 0) {
+    Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูลสำหรับ Export', text: 'กรุณารอให้ข้อมูลโหลดเสร็จเรียบร้อยก่อน' });
+    return;
+  }
+
+  let csvContent = '\uFEFFRank,Brand,Units,MarketShare,Month\r\n';
+  const total = currentExternalItems.reduce((s, i) => s + i.units, 0) || 1;
+
+  currentExternalItems.forEach((item, idx) => {
+    const share = ((item.units / total) * 100).toFixed(1) + '%';
+    csvContent += `${item.rank || (idx + 1)},"${item.brand}",${item.units},"${share}","${item.month}"\r\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.setAttribute('download', 'EV_Top10_BEV_Market.csv');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ---------------------------------------------------------
