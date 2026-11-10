@@ -1864,6 +1864,119 @@ function renderTable(res) {
     body.appendChild(totalTr);
   }
 }
+
+// ---------------------------------------------------------
+// ฟังก์ชัน renderCharts สำหรับวาดกราฟ Trend และ Market Share
+// ---------------------------------------------------------
+function renderCharts(res) {
+  if(!window.Chart) return;
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const textColor = isDark ? '#9ca3af' : '#64748b';
+
+  if(trendChartInstance) trendChartInstance.destroy();
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  trendChartInstance = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: res.trend.months,
+      datasets: res.trend.datasets.map((ds, i) => ({
+        label: ds.label,
+        data: ds.data,
+        borderColor: BALANCED_COLORS[i % BALANCED_COLORS.length],
+        backgroundColor: BALANCED_COLORS[i % BALANCED_COLORS.length] + '15',
+        fill: true,
+        tension: 0.35,
+        borderWidth: 3,
+        pointRadius: 3,
+        pointHoverRadius: 6
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: textColor, boxWidth: 12, font: { weight: '700', size: 12 } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: textColor, font: { weight: '600' } } },
+        y: { grid: { color: isDark ? '#334151' : '#e2e8f0' }, ticks: { color: textColor, font: { weight: '600' } } }
+      }
+    }
+  });
+
+  if(marketChartInstance) marketChartInstance.destroy();
+  
+  const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
+  const totalMarket = res.grandTotal || 1;
+  const top10 = sortedRows.slice(0, 10);
+  const othersTotal = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
+
+  const labels = top10.map(r => r.brand);
+  const data = top10.map(r => r.total);
+  if(othersTotal > 0) {
+    labels.push('Others');
+    data.push(othersTotal);
+  }
+
+  const marketCtx = document.getElementById('marketChart').getContext('2d');
+  marketChartInstance = new Chart(marketCtx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      cutout: '72%'
+    }
+  });
+
+  const rankListEl = document.getElementById('marketRankList');
+  let rankHtml = '';
+  
+  top10.forEach((r, idx) => {
+    const val = r.total;
+    const percentage = ((val / totalMarket) * 100).toFixed(1);
+    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
+    
+    rankHtml += `
+      <div class="market-rank-item">
+        <div class="market-rank-left">
+          <span class="market-badge">#${idx + 1}</span>
+          <span class="market-dot" style="background: ${color};"></span>
+          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.brand}">${r.brand}</span>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
+          <span style="color: var(--text);">${nf.format(val)}</span>
+          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${percentage}%)</span>
+        </div>
+      </div>
+    `;
+  });
+
+  if(othersTotal > 0) {
+    const othersPercentage = ((othersTotal / totalMarket) * 100).toFixed(1);
+    const othersColor = BALANCED_COLORS[10] || '#94a3b8';
+    rankHtml += `
+      <div class="market-rank-item">
+        <div class="market-rank-left">
+          <span class="market-badge" style="background: var(--border); color: var(--mute);">Others</span>
+          <span class="market-dot" style="background: ${othersColor};"></span>
+          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="แบรนด์อื่นๆ ทั้งหมด">แบรนด์อื่นๆ (Others)</span>
+        </div>
+        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
+          <span style="color: var(--text);">${nf.format(othersTotal)}</span>
+          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${othersPercentage}%)</span>
+        </div>
+      </div>
+    `;
+  }
+
+  rankListEl.innerHTML = rankHtml;
+}
 </script>
 </body>
 </html>
