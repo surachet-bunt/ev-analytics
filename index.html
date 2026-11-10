@@ -229,10 +229,10 @@ body{
   <!-- TAB 1: ข้อมูลภายในองค์กร -->
   <div id="sectionInternal" class="tab-section">
     
-    <!-- แถบกรองเลือกปี สำหรับ 3 ส่วนหลัก -->
+    <!-- แถบกรองเลือกปีจากชื่อเดือน (เช่น AUG 2026, SEP 2026) -->
     <div class="card" style="margin-bottom: 24px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--mute);">📅 เลือกปีข้อมูลที่ต้องการแสดง:</span>
+        <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--mute);">📅 เลือกปีจากเดือนที่บันทึก:</span>
         <select id="selectInternalYear" class="search-input" style="width: 180px; padding: 10px 14px;" onchange="onInternalYearChange()">
           <option value="ALL">-- แสดงทุกปี (All Years) --</option>
         </select>
@@ -291,7 +291,7 @@ body{
     <!-- ส่วนที่ 1: Registration Trend Analysis (Top Brands) -->
     <div class="card" style="margin-bottom: 24px;">
       <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 4px;">📈 Registration Trend Analysis (Top Brands)</h3>
-      <p style="font-size: 11px; color: var(--mute); margin-bottom: 16px;">กราฟแสดงยอดจดทะเบียนย้อนหลังรายเดือนตามปีที่เลือก</p>
+      <p style="font-size: 11px; color: var(--mute); margin-bottom: 16px;">กราฟแสดงยอดจดทะเบียนย้อนหลังรายเดือนตามปีที่เลือกจากชื่อเดือน</p>
       <div class="trend-card-body">
         <div class="trend-chart-container">
           <canvas id="trendChart"></canvas>
@@ -322,7 +322,7 @@ body{
           </div>
           <div class="input-group">
             <label>Year *</label>
-            <input type="number" id="year" required placeholder="2027">
+            <input type="number" id="year" required placeholder="2026">
           </div>
           <div class="input-group">
             <label>Battery Type</label>
@@ -787,15 +787,15 @@ body{
     <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
       <div class="input-group">
         <label>ปี ค.ศ. (Year) *</label>
-        <input type="number" id="sumYear" required value="2027">
+        <input type="number" id="sumYear" required value="2026">
       </div>
       <div class="input-group">
         <label>เดือน (Month) *</label>
-        <input type="text" id="sumMonth" required placeholder="เช่น มกราคม">
+        <input type="text" id="sumMonth" required placeholder="เช่น NOV 2026">
       </div>
       <div class="input-group">
         <label>ยอดสะสมรวม (Cumulative Units) *</label>
-        <input type="number" id="sumUnits" required min="0" placeholder="เช่น 130000">
+        <input type="number" id="sumUnits" required min="0" placeholder="เช่น 122128">
       </div>
       <div class="input-group">
         <label>อัตราเติบโต YTD (%)</label>
@@ -867,7 +867,7 @@ body{
       </div>
       <div class="input-group">
         <label>ปีที่ผลิต ออกจำหน่าย *</label>
-        <input type="number" id="mProdYear" required placeholder="เช่น 2027">
+        <input type="number" id="mProdYear" required placeholder="เช่น 2026">
       </div>
       <div class="input-group">
         <label>ประเภทแบตเตอรี่ *</label>
@@ -941,11 +941,11 @@ body{
     <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
       <div class="input-group">
         <label>ปี ค.ศ. (Year) *</label>
-        <input type="number" id="extYear" required value="2027">
+        <input type="number" id="extYear" required value="2026">
       </div>
       <div class="input-group">
         <label>เดือน (Month) *</label>
-        <input type="text" id="extMonth" required placeholder="เช่น มกราคม">
+        <input type="text" id="extMonth" required placeholder="เช่น NOV 2026">
       </div>
       <div class="input-group">
         <label>อันดับ (Rank) *</label>
@@ -985,7 +985,7 @@ let carSpecsList = [];
 let marketSummaryList = [];
 let selectedCarModel = '';
 let selectedTrimId = null;
-let currentInternalYear = new Date().getFullYear().toString(); // ค่าเริ่มต้นเป็นปีปัจจุบัน (เช่น 2027)
+let currentInternalYear = new Date().getFullYear().toString();
 const nf = new Intl.NumberFormat('en-US');
 
 const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
@@ -1070,7 +1070,7 @@ function switchTab(target) {
 }
 
 // ---------------------------------------------------------
-// ฟังก์ชันกรองข้อมูลภายในตามปี (แยกดูปีปัจจุบัน / ปีย้อนหลัง)
+// ฟังก์ชันกรองข้อมูลภายในตามปี (สกัดปีจากชื่อเดือน เช่น AUG 2026)
 // ---------------------------------------------------------
 function onInternalYearChange() {
   const sel = document.getElementById('selectInternalYear');
@@ -1090,14 +1090,15 @@ async function refreshDisplay() {
     if (error) throw error;
     rawGlobalRawData = rawData || [];
 
-    // รวบรวมรายชื่อปีทั้งหมดที่มีในฐานข้อมูลเพื่อใส่ใน Dropdown
+    // สกัดปีจากชื่อเดือน (เช่น AUG 2026 -> 2026) เพื่อทำตัวเลือกใน Dropdown
     const yearSet = new Set();
     rawGlobalRawData.forEach(item => {
-      if (item.year) yearSet.value ? yearSet.add(String(item.year)) : yearSet.add(String(item.year));
       if (item.ev_monthly_sales) {
         item.ev_monthly_sales.forEach(s => {
           const parts = String(s.month_name).trim().split(/\s+/);
-          if (parts.length > 1) yearSet.add(parts[parts.length - 1]);
+          if (parts.length > 1) {
+            yearSet.add(parts[parts.length - 1]); // ดึงตัวหลังสุดเป็นปี ค.ศ.
+          }
         });
       }
     });
@@ -1106,7 +1107,6 @@ async function refreshDisplay() {
     const yearSelect = document.getElementById('selectInternalYear');
     let yearOpts = '<option value="ALL">-- แสดงทุกปี (All Years) --</option>';
     
-    // หากยังไม่มีการเลือกค่า ให้ตั้งค่าเริ่มต้นเป็นปีล่าสุด (เช่น 2027) หรือปีปัจจุบัน
     const defaultYear = yearsArr.length > 0 ? yearsArr[0] : new Date().getFullYear().toString();
     if (!currentInternalYear || (currentInternalYear !== 'ALL' && !yearsArr.includes(currentInternalYear))) {
       currentInternalYear = defaultYear;
@@ -1129,31 +1129,21 @@ async function refreshDisplay() {
 }
 
 function processAndRenderInternalData(rawData) {
-  // กรองข้อมูลตามปีที่เลือก (currentInternalYear)
-  const filteredRaw = rawData.filter(item => {
-    if (currentInternalYear === 'ALL') return true;
-    if (String(item.year) === currentInternalYear) return true;
-    
-    // ตรวจสอบจากชื่อเดือนที่มีปีต่อท้าย เช่น "Jan 2027"
-    if (item.ev_monthly_sales && item.ev_monthly_sales.some(s => String(s.month_name).includes(currentInternalYear))) {
-      return true;
-    }
-    return false;
-  });
-
+  // กรองเฉพาะเดือนที่มีปีตรงกับที่เลือกใน Dropdown
   const monthSet = new Set();
-  filteredRaw.forEach(item => {
+  rawData.forEach(item => {
     if (item.ev_monthly_sales) {
       item.ev_monthly_sales.forEach(s => {
-        if (currentInternalYear === 'ALL' || String(s.month_name).includes(currentInternalYear)) {
-          monthSet.add(s.month_name);
+        const mStr = String(s.month_name).trim();
+        if (currentInternalYear === 'ALL' || mStr.includes(currentInternalYear)) {
+          monthSet.add(mStr);
         }
       });
     }
   });
 
   let monthHeadersOnly = Array.from(monthSet);
-  if (monthHeadersOnly.length === 0) monthHeadersOnly = [`Jan ${currentInternalYear === 'ALL' ? '2027' : currentInternalYear}`];
+  if (monthHeadersOnly.length === 0) monthHeadersOnly = [`AUG ${currentInternalYear === 'ALL' ? '2026' : currentInternalYear}`];
   
   const monthOrder = { 'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12 };
   monthHeadersOnly.sort((a, b) => {
@@ -1161,8 +1151,8 @@ function processAndRenderInternalData(rawData) {
     const partsB = String(b).trim().split(/\s+/);
     const mNameA = partsA[0] ? partsA[0].toLowerCase().substring(0, 3) : '';
     const mNameB = partsB[0] ? partsB[0].toLowerCase().substring(0, 3) : '';
-    const yearA = parseInt(partsA[1]) || 2027;
-    const yearB = parseInt(partsB[1]) || 2027;
+    const yearA = parseInt(partsA[1]) || 2026;
+    const yearB = parseInt(partsB[1]) || 2026;
     if (yearA !== yearB) return yearA - yearB;
     return (monthOrder[mNameA] || 99) - (monthOrder[mNameB] || 99);
   });
@@ -1174,7 +1164,7 @@ function processAndRenderInternalData(rawData) {
   monthHeadersOnly.forEach(m => { monthTotals[m] = 0; });
   let grandTotal = 0;
 
-  const rows = filteredRaw.map((r, index) => {
+  const rows = rawData.map((r, index) => {
     const obj = Object.create(null);
     obj.rowNum = r.id;
     obj.no = index + 1;
@@ -1186,7 +1176,12 @@ function processAndRenderInternalData(rawData) {
 
     const salesMap = {};
     if (r.ev_monthly_sales) {
-      r.ev_monthly_sales.forEach(s => { salesMap[s.month_name] = s.units; });
+      r.ev_monthly_sales.forEach(s => { 
+        const mStr = String(s.month_name).trim();
+        if (currentInternalYear === 'ALL' || mStr.includes(currentInternalYear)) {
+          salesMap[mStr] = s.units; 
+        }
+      });
     }
 
     monthHeadersOnly.forEach(m => {
@@ -1221,7 +1216,7 @@ function processAndRenderInternalData(rawData) {
       }
     }
     return obj;
-  }).sort((a, b) => b.total - a.total);
+  }).filter(r => currentInternalYear === 'ALL' || r.total > 0).sort((a, b) => b.total - a.total);
 
   rows.forEach((r, idx) => { r.no = idx + 1; });
 
@@ -1521,7 +1516,7 @@ function openCarModal(mode) {
       document.getElementById('mPrice').value = trimData.price || '';
       document.getElementById('mWebsiteUrl').value = trimData.website_url || '';
       document.getElementById('mMadeInThailand').value = trimData.made_in_thailand !== false ? 'true' : 'false';
-      document.getElementById('mProdYear').value = trimData.production_year || 2027;
+      document.getElementById('mProdYear').value = trimData.production_year || 2026;
       document.getElementById('mBatteryChem').value = trimData.battery_chem || '';
       document.getElementById('mBatteryTech').value = trimData.battery_tech || '';
       document.getElementById('mRangeVal').value = trimData.range_val;
@@ -1557,7 +1552,7 @@ async function handleCarFormSubmit(e) {
     price: Number(document.getElementById('mPrice').value) || 0,
     website_url: document.getElementById('mWebsiteUrl').value.trim(),
     made_in_thailand: document.getElementById('mMadeInThailand').value === 'true',
-    production_year: Number(document.getElementById('mProdYear').value) || 2027,
+    production_year: Number(document.getElementById('mProdYear').value) || 2026,
     battery_chem: document.getElementById('mBatteryChem').value.trim(),
     battery_tech: document.getElementById('mBatteryTech').value.trim(),
     range_val: document.getElementById('mRangeVal').value.trim(),
@@ -1812,8 +1807,8 @@ function openExtModal(mode, id = null) {
       document.getElementById('extMonth').value = parts[0];
       document.getElementById('extYear').value = parts[1];
     } else {
-      document.getElementById('extMonth').value = 'มกราคม';
-      document.getElementById('extYear').value = 2027;
+      document.getElementById('extMonth').value = 'AUG 2026';
+      document.getElementById('extYear').value = 2026;
     }
   }
 }
@@ -1910,22 +1905,26 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       }
     }
 
-    const thaiMonthsOrder = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const thaiMonthsOrder = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     let prevMonth = '';
     let prevYear = targetYear;
-    const mIdx = thaiMonthsOrder.indexOf(targetMonth);
+    
+    // ตรวจสอบรูปแบบชื่อเดือน เช่น AUG 2026
+    const parts = targetMonth.split(/\s+/);
+    const mStr = parts[0] ? parts[0].toLowerCase() : '';
+    const mIdx = thaiMonthsOrder.indexOf(mStr);
+    
     if (mIdx > 0) {
-      prevMonth = thaiMonthsOrder[mIdx - 1];
+      prevMonth = `${thaiMonthsOrder[mIdx - 1].toUpperCase()} ${targetYear}`;
     } else if (mIdx === 0) {
-      prevMonth = 'ธันวาคม';
-      prevYear = targetYear - 1;
+      prevMonth = `DEC ${targetYear - 1}`;
     }
 
-    let filteredItems = allRows.filter(i => i.month === targetMonth && i.year === targetYear);
+    let filteredItems = allRows.filter(i => i.month.toLowerCase() === targetMonth.toLowerCase());
     filteredItems.sort((a, b) => a.rank - b.rank);
     const top10Items = filteredItems;
 
-    let prevItems = allRows.filter(i => i.month === prevMonth && i.year === prevYear);
+    let prevItems = allRows.filter(i => i.month.toLowerCase() === prevMonth.toLowerCase());
     const prevMap = new Map();
     prevItems.forEach(pi => prevMap.set(pi.brand, pi.units));
 
@@ -1955,7 +1954,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     externalLoaded = true;
     currentExternalItems = top10Items;
     
-    document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth} ${targetYear}`;
+    document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth}`;
     document.getElementById('ext-stat-month').innerText = nf.format(totalMonth) + ' คัน';
     document.getElementById('ext-stat-topbrand').innerText = topBrand;
     document.getElementById('ext-stat-gainer').innerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : 'ไม่มีข้อมูลเปรียบเทียบ';
@@ -1964,9 +1963,9 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     if (selectEl) {
       let optHtml = '';
       availableMonths.forEach(m => {
-        const val = `${m.month}_${m.year}`;
-        const label = `${m.month} ${m.year}`;
-        const isSelected = label === `${targetMonth} ${targetYear}` ? 'selected' : '';
+        const val = m.month;
+        const label = m.month;
+        const isSelected = label.toLowerCase() === targetMonth.toLowerCase() ? 'selected' : '';
         optHtml += `<option value="${val}" ${isSelected}>${label}</option>`;
       });
       selectEl.innerHTML = optHtml;
@@ -2000,7 +1999,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
           <td><b>${nf.format(item.units)}</b></td>
           <td><span style="font-weight:700; color:var(--mute);">${marketShare}</span></td>
           <td>${growthHtml}</td>
-          <td>${item.month} ${item.year}</td>
+          <td>${item.month}</td>
           <td>
             <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openExtModal('edit', ${item.id})">แก้ไข</button>
             <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteExtRecord(${item.id})">ลบ</button>
@@ -2020,8 +2019,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
 function onChangeExternalFilter() {
   const val = document.getElementById('selectMonthYear').value;
   if (!val) return;
-  const parts = val.split('_');
-  loadExternalMarketData(parts[0], parts[1]);
+  loadExternalMarketData(val);
 }
 
 function renderExtMarketChart(labels, data) {
@@ -2059,12 +2057,12 @@ function exportExternalCSV() {
     return;
   }
 
-  let csvContent = '\uFEFFRank,Brand,Units,MarketShare,Month,Year\r\n';
+  let csvContent = '\uFEFFRank,Brand,Units,MarketShare,Month\r\n';
   const total = currentExternalItems.reduce((s, i) => s + i.units, 0) || 1;
 
   currentExternalItems.forEach((item, idx) => {
     const share = ((item.units / total) * 100).toFixed(1) + '%';
-    csvContent += `${item.rank || (idx + 1)},"${item.brand}",${item.units},"${share}","${item.month}",${item.year}\r\n`;
+    csvContent += `${item.rank || (idx + 1)},"${item.brand}",${item.units},"${share}","${item.month}"\r\n`;
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2117,24 +2115,7 @@ function exportInternalCSV() {
   document.body.removeChild(a);
 }
 
-async function loadPrices() {
-  try {
-    const { data } = await db.from('ev_prices').select('*').order('id', { ascending: false }).limit(1);
-    if (data && data.length > 0) {
-      const p = data[0];
-      document.getElementById('stat-offpeak').innerText = '฿' + Number(p.off_peak).toFixed(2);
-      document.getElementById('stat-peak').innerText = '฿' + Number(p.peak).toFixed(2);
-      document.getElementById('stat-dc').innerText = '฿' + Number(p.station_dc).toFixed(2);
-      if(p.off_peak) document.getElementById('calcPriceEvHome').value = Number(p.off_peak).toFixed(2);
-      if(p.station_dc) document.getElementById('calcPriceEvStation').value = Number(p.station_dc).toFixed(2);
-      calculateCostComparison();
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-function renderTable(res) {
+async function renderTable(res) {
   const head = document.getElementById('tableHead');
   const body = document.getElementById('tableBody');
   head.innerHTML = '';
@@ -2436,11 +2417,11 @@ async function deleteRecord(rowNum) {
 
 async function openAddColumnModal() {
   Swal.fire({
-    title: 'เพิ่มคอลัมน์เดือนใหม่', input: 'text', inputPlaceholder: 'เช่น Jan 2027',
+    title: 'เพิ่มคอลัมน์เดือนใหม่', input: 'text', inputPlaceholder: 'เช่น DEC 2026',
     showCancelButton: true, confirmButtonText: 'เพิ่ม', cancelButtonText: 'ยกเลิก'
   }).then(async r => {
     if(r.isConfirmed && r.value) {
-      const newMonth = r.value.trim();
+      const newMonth = r.value.trim().toUpperCase();
       try {
         const { data: allEv, error: fetchErr } = await db.from('ev_data').select('id');
         if (fetchErr) throw fetchErr;
