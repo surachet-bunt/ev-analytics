@@ -1450,25 +1450,31 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       }
     }
 
-    // แยกชื่อเดือนและปีจาก targetMonth (เช่น "ตุลาคม 2026") เพื่อหาเดือนก่อนหน้าเทียบ MoM
     const thaiMonthsList = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const parts = targetMonth.split(/\s+/);
     const mName = parts[0] || '';
     const mYear = parseInt(parts[1]) || new Date().getFullYear();
     const mIdx = thaiMonthsList.indexOf(mName);
 
-    let prevMonth = '';
+    let prevMonthName = '';
+    let prevYear = mYear;
     if (mIdx > 0) {
-      prevMonth = `${thaiMonthsList[mIdx - 1]} ${mYear}`;
+      prevMonthName = thaiMonthsList[mIdx - 1];
     } else if (mIdx === 0) {
-      prevMonth = `ธันวาคม ${mYear - 1}`;
+      prevMonthName = 'ธันวาคม';
+      prevYear = mYear - 1;
     }
 
     let filteredItems = allRows.filter(i => i.month.toLowerCase() === targetMonth.toLowerCase());
     filteredItems.sort((a, b) => a.rank - b.rank);
     const top10Items = filteredItems;
 
-    let prevItems = allRows.filter(i => i.month.toLowerCase() === prevMonth.toLowerCase());
+    // ค้นหาเดือนก่อนหน้าแบบยืดหยุ่น รองรับทั้งแบบมีปีต่อท้ายหรือไม่มีปี
+    let prevItems = allRows.filter(i => {
+      const im = i.month.toLowerCase();
+      return im === `${prevMonthName.toLowerCase()} ${prevYear}` || im === prevMonthName.toLowerCase() || (mName === '' && i.id);
+    });
+
     const prevMap = new Map();
     prevItems.forEach(pi => prevMap.set(pi.brand, pi.units));
 
@@ -2080,185 +2086,6 @@ function renderComparisonTable() {
   });
 
   tbody.innerHTML = html;
-}
-
-// ---------------------------------------------------------
-// ฟังก์ชัน renderTable สำหรับแสดงข้อมูลในตารางหลัก
-// ---------------------------------------------------------
-function renderTable(res) {
-  const head = document.getElementById('tableHead');
-  const body = document.getElementById('tableBody');
-  head.innerHTML = '';
-  body.innerHTML = '';
-
-  const headers = res.displayHeaders;
-  let headHtml = '<tr><th>#</th><th>Brand</th><th>Year</th><th>Battery</th>';
-  headers.slice(4).forEach(h => headHtml += `<th>${h}</th>`);
-  headHtml += '<th>Total</th><th>Growth (MoM)</th><th>Actions</th></tr>';
-  head.innerHTML = headHtml;
-
-  const isFiltered = document.getElementById('searchBox').value.trim() !== '';
-
-  res.rows.forEach((r, index) => {
-    let tr = document.createElement('tr');
-    tr.dataset.search = `${r.brand} ${r.year} ${r.batteryType}`.toLowerCase();
-    
-    let displayNo = index + 1;
-    let html = `<td><b>${displayNo}</b></td>
-                <td><b style="font-size: 14px; color: var(--accent);">${r.brand}</b></td>
-                <td>${r.year}</td>
-                <td><span class="battery-badge">${r.batteryType}</span></td>`;
-    
-    headers.slice(4).forEach(h => {
-      html += `<td>${nf.format(r[h] || 0)}</td>`;
-    });
-
-    html += `<td><b style="font-size: 14px; color: var(--accent);">${nf.format(r.total)}</b></td>`;
-    
-    if(r.growthAvailable) {
-      const isUp = r.growth >= 0;
-      const badgeClass = isUp ? 'badge-pos' : 'badge-neg';
-      const arrow = isUp ? '▲' : '▼';
-      html += `<td><span class="badge ${badgeClass}">${arrow} ${Math.abs(r.growth).toFixed(1)}%</span></td>`;
-    } else {
-      html += `<td><span class="badge badge-neutral">—</span></td>`;
-    }
-
-    html += `<td>
-              <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openEditModal(${r.rowNum})">แก้ไข</button>
-              <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteRecord(${r.rowNum})">ลบ</button>
-            </td>`;
-    tr.innerHTML = html;
-    body.appendChild(tr);
-  });
-
-  if(!isFiltered && res.monthTotals) {
-    let totalTr = document.createElement('tr');
-    totalTr.className = 'total-row';
-    let totalHtml = `<td>⭐</td><td><b>GRAND TOTAL</b></td><td>-</td><td>-</td>`;
-    
-    headers.slice(4).forEach(h => {
-      const mSum = res.monthTotals[h] || 0;
-      totalHtml += `<td>${nf.format(mSum)}</td>`;
-    });
-
-    totalHtml += `<td><b>${nf.format(res.grandTotal)}</b></td><td>-</td><td>-</td>`;
-    totalTr.innerHTML = totalHtml;
-    body.appendChild(totalTr);
-  }
-}
-
-// ---------------------------------------------------------
-// ฟังก์ชัน renderCharts สำหรับวาดกราฟ Trend และ Market Share
-// ---------------------------------------------------------
-function renderCharts(res) {
-  if(!window.Chart) return;
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const textColor = isDark ? '#9ca3af' : '#64748b';
-
-  if(trendChartInstance) trendChartInstance.destroy();
-  const trendCtx = document.getElementById('trendChart').getContext('2d');
-  trendChartInstance = new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: res.trend.months,
-      datasets: res.trend.datasets.map((ds, i) => ({
-        label: ds.label,
-        data: ds.data,
-        borderColor: BALANCED_COLORS[i % BALANCED_COLORS.length],
-        backgroundColor: BALANCED_COLORS[i % BALANCED_COLORS.length] + '15',
-        fill: true,
-        tension: 0.35,
-        borderWidth: 3,
-        pointRadius: 3,
-        pointHoverRadius: 6
-      }))
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: textColor, boxWidth: 12, font: { weight: '700', size: 12 } } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: textColor, font: { weight: '600' } } },
-        y: { grid: { color: isDark ? '#334151' : '#e2e8f0' }, ticks: { color: textColor, font: { weight: '600' } } }
-      }
-    }
-  });
-
-  if(marketChartInstance) marketChartInstance.destroy();
-  
-  const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
-  const totalMarket = res.grandTotal || 1;
-  const top10 = sortedRows.slice(0, 10);
-  const othersTotal = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
-
-  const labels = top10.map(r => r.brand);
-  const data = top10.map(r => r.total);
-  if(othersTotal > 0) {
-    labels.push('Others');
-    data.push(othersTotal);
-  }
-
-  const marketCtx = document.getElementById('marketChart').getContext('2d');
-  marketChartInstance = new Chart(marketCtx, {
-    type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
-        borderWidth: 0,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      cutout: '72%'
-    }
-  });
-
-  const rankListEl = document.getElementById('marketRankList');
-  let rankHtml = '';
-  
-  top10.forEach((r, idx) => {
-    const val = r.total;
-    const percentage = ((val / totalMarket) * 100).toFixed(1);
-    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
-    
-    rankHtml += `
-      <div class="market-rank-item">
-        <div class="market-rank-left">
-          <span class="market-badge">#${idx + 1}</span>
-          <span class="market-dot" style="background: ${color};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.brand}">${r.brand}</span>
-        </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(val)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${percentage}%)</span>
-        </div>
-      </div>
-    `;
-  });
-
-  if(othersTotal > 0) {
-    const othersPercentage = ((othersTotal / totalMarket) * 100).toFixed(1);
-    const othersColor = BALANCED_COLORS[10] || '#94a3b8';
-    rankHtml += `
-      <div class="market-rank-item">
-        <div class="market-rank-left">
-          <span class="market-badge" style="background: var(--border); color: var(--mute);">Others</span>
-          <span class="market-dot" style="background: ${othersColor};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="แบรนด์อื่นๆ ทั้งหมด">แบรนด์อื่นๆ (Others)</span>
-        </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(othersTotal)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${othersPercentage}%)</span>
-        </div>
-      </div>
-    `;
-  }
-
-  rankListEl.innerHTML = rankHtml;
 }
 </script>
 </body>
