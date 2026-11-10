@@ -1258,6 +1258,164 @@ function processAndRenderInternalData(rawData) {
 }
 
 // ---------------------------------------------------------
+// ฟังก์ชันจัดการฟอร์มและปุ่มแอคชันตารางภายใน
+// ---------------------------------------------------------
+function filterTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  document.querySelectorAll('#tableBody tr:not(.total-row)').forEach(tr => {
+    tr.style.display = tr.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+
+function toggleForm(show) {
+  const panel = document.getElementById('formPanel');
+  if(show) panel.classList.remove('hide');
+  else panel.classList.add('hide');
+}
+
+function openAddModal() {
+  document.getElementById('formTitle').innerText = 'เพิ่มข้อมูลแบรนด์ EV ใหม่';
+  document.getElementById('evForm').reset();
+  document.getElementById('formRowNum').value = '';
+  document.getElementById('formOriginalNo').value = '';
+  buildDynamicInputs();
+  toggleForm(true);
+}
+
+function openEditModal(rowNum) {
+  const r = globalData.rows.find(x => x.rowNum === rowNum);
+  if(!r) return;
+  document.getElementById('formTitle').innerText = `แก้ไขข้อมูล: ${r.brand}`;
+  document.getElementById('formRowNum').value = r.rowNum;
+  document.getElementById('formOriginalNo').value = r.no;
+  document.getElementById('brand').value = r.brand;
+  document.getElementById('year').value = r.year;
+  document.getElementById('batteryType').value = r.batteryType;
+  buildDynamicInputs(r);
+  toggleForm(true);
+
+  const formPanel = document.getElementById('formPanel');
+  formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildDynamicInputs(existingRow = null) {
+  const container = document.getElementById('dynamicMonthInputs');
+  container.innerHTML = '';
+  if(!globalData || !globalData.fullHeaders) return;
+  
+  globalData.fullHeaders.slice(4).forEach(h => {
+    const val = existingRow ? (existingRow[h] != null ? existingRow[h] : '') : '';
+    const div = document.createElement('div');
+    div.className = 'input-group';
+    div.innerHTML = `<label>${h}</label><input type="number" class="month-input" data-month="${h}" value="${val}" min="0" placeholder="—">`;
+    container.appendChild(div);
+  });
+}
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const formData = {
+    rowNum: document.getElementById('formRowNum').value,
+    brand: document.getElementById('brand').value.trim(),
+    year: Number(document.getElementById('year').value),
+    batteryType: document.getElementById('batteryType').value.trim().toUpperCase()
+  };
+
+  const monthlyPayloads = [];
+  document.querySelectorAll('.month-input').forEach(input => {
+    const monthName = input.getAttribute('data-month');
+    const val = Number(input.value.trim()) || 0;
+    monthlyPayloads.push({ monthName, val });
+  });
+
+  try {
+    let evId = formData.rowNum ? Number(formData.rowNum) : null;
+
+    if (evId) {
+      const { error: updateErr } = await db.from('ev_data').update({
+        brand: formData.brand,
+        year: formData.year,
+        battery_type: formData.batteryType
+      }).eq('id', evId);
+      if (updateErr) throw updateErr;
+    } else {
+      const { data: inserted, error: insertErr } = await db.from('ev_data').insert([{
+        brand: formData.brand,
+        year: formData.year,
+        battery_type: formData.batteryType
+      }]).select();
+      if (insertErr) throw insertErr;
+      if (inserted && inserted.length > 0) {
+        evId = inserted[0].id;
+      }
+    }
+
+    for (const m of monthlyPayloads) {
+      const { error: upsertErr } = await db.from('ev_monthly_sales').upsert({
+        ev_id: evId,
+        month_name: m.monthName,
+        units: m.val
+      }, { onConflict: 'ev_id,month_name' });
+      if (upsertErr) throw upsertErr;
+    }
+
+    toggleForm(false);
+    refreshDisplay();
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสำเร็จ', showConfirmButton:false, timer:1500});
+
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'ไม่สามารถบันทึกได้', text: err.message});
+  }
+}
+
+async function deleteRecord(rowNum) {
+  Swal.fire({
+    title: 'ยืนยันการลบรายการนี้?',
+    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
+    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
+  }).then(async result => {
+    if(result.isConfirmed) {
+      try {
+        const { error } = await db.from('ev_data').delete().eq('id', Number(rowNum));
+        if (error) throw error;
+        refreshDisplay();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
+    }
+  });
+}
+
+async function openAddColumnModal() {
+  Swal.fire({
+    title: 'เพิ่มคอลัมน์เดือนใหม่', input: 'text', inputPlaceholder: 'เช่น พฤศจิกายน 2026',
+    showCancelButton: true, confirmButtonText: 'เพิ่ม', cancelButtonText: 'ยกเลิก'
+  }).then(async r => {
+    if(r.isConfirmed && r.value) {
+      const newMonth = r.value.trim();
+      try {
+        const { data: allEv, error: fetchErr } = await db.from('ev_data').select('id');
+        if (fetchErr) throw fetchErr;
+
+        if (allEv && allEv.length > 0) {
+          const payload = allEv.map(ev => ({
+            ev_id: ev.id,
+            month_name: newMonth,
+            units: 0
+          }));
+          const { error: insErr } = await db.from('ev_monthly_sales').upsert(payload, { onConflict: 'ev_id,month_name' });
+          if (insErr) throw insErr;
+        }
+        refreshDisplay();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------
 // จัดการข้อมูลสะสม (ev_market_summary)
 // ---------------------------------------------------------
 async function loadMarketSummary() {
