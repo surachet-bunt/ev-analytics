@@ -335,18 +335,19 @@ body{
     </div>
   </div>
 
-  <!-- TAB 2: ตลาด EV ประเทศไทย (ดึงข้อมูลสะสมจากตารางแยกต่างหาก) -->
+  <!-- TAB 2: ตลาด EV ประเทศไทย (รวมยอดสะสมทุกปีอัตโนมัติ) -->
   <div id="sectionExternal" class="tab-section hide">
     
-    <!-- ส่วนข้อมูลสะสมภาพรวม (ดึงจาก ev_market_summary) -->
+    <!-- ส่วนข้อมูลสะสมภาพรวม (รวมผลทุกปี) -->
     <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
         <div>
-          <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">📈 ภาพรวมยอดจดทะเบียนสะสมรถยนต์ไฟฟ้าในประเทศไทย</h3>
-          <p style="font-size: 12px; color: var(--mute);">ข้อมูลสถิติสะสมภาพรวมจากตารางแยกต่างหากที่คุณอัปเดตเอง</p>
+          <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">📈 ภาพรวมยอดสะสมรถยนต์ไฟฟ้า (รวมทุกปีในระบบ)</h3>
+          <p style="font-size: 12px; color: var(--mute);">รวมผลยอดสะสมจากทุกปีในตาราง ev_market_summary อัตโนมัติ</p>
         </div>
         <div>
-          <button class="btn btn-primary" onclick="openSummaryModal()">＋ จัดการข้อมูลสะสม</button>
+          <button class="btn btn-primary" onclick="openSummaryModal('add')">＋ เพิ่มงวดสะสม</button>
+          <button class="btn" onclick="openSummaryListModal()">📋 จัดการข้อมูลสะสมทั้งหมด</button>
         </div>
       </div>
 
@@ -354,45 +355,45 @@ body{
         <div class="card card-kpi-1" style="background: var(--surface);">
           <div class="kpi-header">
             <div>
-              <div class="kpi-label">ยอดสะสมรวมล่าสุด</div>
+              <div class="kpi-label">ยอดสะสมรวมทุกปี</div>
               <div id="sum-total-units" class="kpi-val" style="color: #3b82f6;">-</div>
             </div>
             <div class="kpi-icon" style="background: #3b82f6;">📊</div>
           </div>
-          <div id="sum-total-note" style="font-size:11px; color:var(--mute); margin-top:8px;">—</div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">ผลรวมทุกงวดสะสม</div>
         </div>
 
         <div class="card card-kpi-2" style="background: var(--surface);">
           <div class="kpi-header">
             <div>
-              <div class="kpi-label">อัตราเติบโต YTD</div>
+              <div class="kpi-label">อัตราเติบโตเฉลี่ย YTD</div>
               <div id="sum-ytd-growth" class="kpi-val" style="color: #f59e0b;">-</div>
             </div>
             <div class="kpi-icon" style="background: #f59e0b;">🚀</div>
           </div>
-          <div style="font-size:11px; color:var(--mute); margin-top:8px;">เทียบกับช่วงเดียวกันปีก่อน</div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">ค่าเฉลี่ยทุกงวดบันทึก</div>
         </div>
 
         <div class="card card-kpi-3" style="background: var(--surface);">
           <div class="kpi-header">
             <div>
-              <div class="kpi-label">เดือน/ปี ล่าสุด</div>
+              <div class="kpi-label">งวดข้อมูลล่าสุด</div>
               <div id="sum-latest-period" class="kpi-val" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #10b981;">🗓️</div>
           </div>
-          <div style="font-size:11px; color:var(--mute); margin-top:8px;">งวดข้อมูลสะสมปัจจุบัน</div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">อัปเดตล่าสุด</div>
         </div>
 
         <div class="card card-kpi-4" style="background: var(--surface);">
           <div class="kpi-header">
             <div>
-              <div class="kpi-label">สถานะฐานข้อมูลสะสม</div>
-              <div class="kpi-val" style="color: #8b5cf6; font-size: 18px; margin-top: 14px;">Connected</div>
+              <div class="kpi-label">จำนวนปีที่เก็บบันทึก</div>
+              <div id="sum-total-records" class="kpi-val" style="color: #8b5cf6;">-</div>
             </div>
             <div class="kpi-icon" style="background: #8b5cf6;">⚡</div>
           </div>
-          <div style="font-size:11px; color:var(--mute); margin-top:8px;">ตาราง ev_market_summary</div>
+          <div style="font-size:11px; color:var(--mute); margin-top:8px;">งวดข้อมูลในระบบ</div>
         </div>
       </div>
     </div>
@@ -763,7 +764,7 @@ body{
 
 <!-- Modal จัดการข้อมูลสะสม (ev_market_summary) -->
 <div id="summaryModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
-  <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">จัดการข้อมูลยอดสะสมตลาด EV</h3>
+  <h3 id="summaryModalTitle" style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">เพิ่มงวดข้อมูลสะสม</h3>
   <form id="summaryForm" onsubmit="handleSummaryFormSubmit(event)">
     <input type="hidden" id="sumId">
     <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
@@ -773,11 +774,11 @@ body{
       </div>
       <div class="input-group">
         <label>เดือน (Month) *</label>
-        <input type="text" id="sumMonth" required placeholder="เช่น กันยายน">
+        <input type="text" id="sumMonth" required placeholder="เช่น ธันวาคม">
       </div>
       <div class="input-group">
         <label>ยอดสะสมรวม (Cumulative Units) *</label>
-        <input type="number" id="sumUnits" required min="0" placeholder="เช่น 110002">
+        <input type="number" id="sumUnits" required min="0" placeholder="เช่น 122128">
       </div>
       <div class="input-group">
         <label>อัตราเติบโต YTD (%)</label>
@@ -785,7 +786,7 @@ body{
       </div>
       <div class="input-group">
         <label>หมายเหตุ / แหล่งอ้างอิง</label>
-        <input type="text" id="sumNote" placeholder="เช่น อ้างอิงสถิติกระทรวงพลังงาน">
+        <input type="text" id="sumNote" placeholder="เช่น https://autolifethailand.tv/...">
       </div>
     </div>
     <div style="display: flex; gap: 10px;">
@@ -793,6 +794,29 @@ body{
       <button type="button" class="btn" onclick="closeSummaryModal()">ยกเลิก</button>
     </div>
   </form>
+</div>
+
+<!-- Modal แสดงรายการข้อมูลสะสมทั้งหมดเพื่อแก้ไข/ลบ -->
+<div id="summaryListModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 700px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 style="font-size: 18px; font-weight: 800; margin: 0;">📋 รายการข้อมูลสะสมทั้งหมดในระบบ</h3>
+    <button class="btn" onclick="closeSummaryListModal()">✕ ปิด</button>
+  </div>
+  <div class="table-container">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>งวดประจำ</th>
+          <th>ยอดสะสมรวม (คัน)</th>
+          <th>YTD Growth</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="summaryListTableBody">
+        <tr><td colspan="4" style="text-align:center; color:var(--mute);">กำลังโหลด...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Modal สำหรับ เพิ่ม/แก้ไข สเปกรถ -->
@@ -941,9 +965,9 @@ let extMarketChartInstance = null;
 let externalLoaded = false;
 let currentExternalItems = [];
 let carSpecsList = [];
+let marketSummaryList = [];
 let selectedCarModel = '';
 let selectedTrimId = null;
-let currentSummaryId = null;
 const nf = new Intl.NumberFormat('en-US');
 
 const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
@@ -1027,48 +1051,113 @@ function switchTab(target) {
 }
 
 // ---------------------------------------------------------
-// จัดการข้อมูลสะสม (ev_market_summary)
+// จัดการข้อมูลสะสม (ev_market_summary) - รวมทุกปีอัตโนมัติ
 // ---------------------------------------------------------
 async function loadMarketSummary() {
   try {
-    const { data, error } = await db.from('ev_market_summary').select('*').order('id', { ascending: false }).limit(1);
+    const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: false }).order('id', { ascending: false });
     if (error) throw error;
 
-    if (data && data.length > 0) {
-      const item = data[0];
-      currentSummaryId = item.id;
-      document.getElementById('sum-total-units').innerText = nf.format(item.cumulative_units) + ' คัน';
-      document.getElementById('sum-total-note').innerText = item.note || 'อัปเดตจากฐานข้อมูลสะสม';
-      document.getElementById('sum-ytd-growth').innerText = item.ytd_growth != null ? (item.ytd_growth >= 0 ? '+' + item.ytd_growth + '%' : item.ytd_growth + '%') : '—';
-      document.getElementById('sum-latest-period').innerText = `${item.month_name} ${item.year}`;
+    marketSummaryList = data || [];
 
-      // เก็บค่าไว้ใส่ฟอร์มตอนกดแก้ไข
-      document.getElementById('sumYear').value = item.year;
-      document.getElementById('sumMonth').value = item.month_name;
-      document.getElementById('sumUnits').value = item.cumulative_units;
-      document.getElementById('sumGrowth').value = item.ytd_growth || '';
-      document.getElementById('sumNote').value = item.note || '';
-    } else {
-      document.getElementById('sum-total-units').innerText = 'ยังไม่มีข้อมูล';
+    if (marketSummaryList.length === 0) {
+      document.getElementById('sum-total-units').innerText = '0 คัน';
       document.getElementById('sum-ytd-growth').innerText = '—';
       document.getElementById('sum-latest-period').innerText = '—';
-      document.getElementById('sum-total-note').innerText = 'กรุณากดจัดการข้อมูลสะสมเพื่อเพิ่มตัวเลข';
+      document.getElementById('sum-total-records').innerText = '0 งวด';
+      return;
     }
+
+    let grandTotalUnits = 0;
+    let totalGrowth = 0;
+    let growthCount = 0;
+
+    marketSummaryList.forEach(item => {
+      grandTotalUnits += Number(item.cumulative_units || 0);
+      if (item.ytd_growth != null) {
+        totalGrowth += Number(item.ytd_growth);
+        growthCount++;
+      }
+    });
+
+    const avgGrowth = growthCount > 0 ? (totalGrowth / growthCount).toFixed(1) : null;
+    const latest = marketSummaryList[0];
+
+    document.getElementById('sum-total-units').innerText = nf.format(grandTotalUnits) + ' คัน';
+    document.getElementById('sum-ytd-growth').innerText = avgGrowth != null ? (avgGrowth >= 0 ? '+' + avgGrowth + '%' : avgGrowth + '%') : '—';
+    document.getElementById('sum-latest-period').innerText = `${latest.month_name} ${latest.year}`;
+    document.getElementById('sum-total-records').innerText = marketSummaryList.length + ' งวด';
+
   } catch (err) {
     console.error('Error loading summary:', err.message);
   }
 }
 
-function openSummaryModal() {
-  document.getElementById('summaryModal').classList.remove('hide');
+function openSummaryModal(mode, id = null) {
+  const modal = document.getElementById('summaryModal');
+  modal.classList.remove('hide');
+  document.getElementById('summaryForm').reset();
+  document.getElementById('sumId').value = '';
+
+  if (mode === 'edit' && id) {
+    const item = marketSummaryList.find(x => x.id == id);
+    if (item) {
+      document.getElementById('summaryModalTitle').innerText = `แก้ไขงวดสะสม: ${item.month_name} ${item.year}`;
+      document.getElementById('sumId').value = item.id;
+      document.getElementById('sumYear').value = item.year;
+      document.getElementById('sumMonth').value = item.month_name;
+      document.getElementById('sumUnits').value = item.cumulative_units;
+      document.getElementById('sumGrowth').value = item.ytd_growth != null ? item.ytd_growth : '';
+      document.getElementById('sumNote').value = item.note || '';
+    }
+  } else {
+    document.getElementById('summaryModalTitle').innerText = 'เพิ่มงวดข้อมูลสะสมใหม่';
+    document.getElementById('sumYear').value = new Date().getFullYear();
+  }
 }
 
 function closeSummaryModal() {
   document.getElementById('summaryModal').classList.add('hide');
 }
 
+function openSummaryListModal() {
+  const modal = document.getElementById('summaryListModal');
+  modal.classList.remove('hide');
+  renderSummaryTableBody();
+}
+
+function closeSummaryListModal() {
+  document.getElementById('summaryListModal').classList.add('hide');
+}
+
+function renderSummaryTableBody() {
+  const tbody = document.getElementById('summaryListTableBody');
+  if (!marketSummaryList || marketSummaryList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลสะสมในระบบ</td></tr>';
+    return;
+  }
+
+  let html = '';
+  marketSummaryList.forEach(item => {
+    const growthStr = item.ytd_growth != null ? (item.ytd_growth >= 0 ? `+${item.ytd_growth}%` : `${item.ytd_growth}%`) : '—';
+    html += `
+      <tr>
+        <td><b>${item.month_name} ${item.year}</b></td>
+        <td><b style="color:var(--accent);">${nf.format(item.cumulative_units)}</b></td>
+        <td>${growthStr}</td>
+        <td>
+          <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="closeSummaryListModal(); openSummaryModal('edit', ${item.id});">แก้ไข</button>
+          <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteSummaryRecord(${item.id})">ลบ</button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
 async function handleSummaryFormSubmit(e) {
   e.preventDefault();
+  const id = document.getElementById('sumId').value;
   const payload = {
     year: Number(document.getElementById('sumYear').value),
     month_name: document.getElementById('sumMonth').value.trim(),
@@ -1078,8 +1167,8 @@ async function handleSummaryFormSubmit(e) {
   };
 
   try {
-    if (currentSummaryId) {
-      const { error } = await db.from('ev_market_summary').update(payload).eq('id', currentSummaryId);
+    if (id) {
+      const { error } = await db.from('ev_market_summary').update(payload).eq('id', Number(id));
       if (error) throw error;
     } else {
       const { error } = await db.from('ev_market_summary').insert([payload]);
@@ -1092,6 +1181,26 @@ async function handleSummaryFormSubmit(e) {
   } catch (err) {
     Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
   }
+}
+
+async function deleteSummaryRecord(id) {
+  Swal.fire({
+    title: 'ยืนยันลบงวดสะสมนี้?',
+    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
+    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
+  }).then(async res => {
+    if (res.isConfirmed) {
+      try {
+        const { error } = await db.from('ev_market_summary').delete().eq('id', Number(id));
+        if (error) throw error;
+        loadMarketSummary();
+        renderSummaryTableBody();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลสำเร็จ', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------
@@ -1218,8 +1327,8 @@ function openExtModal(mode, id = null) {
       document.getElementById('extMonth').value = parts[0];
       document.getElementById('extYear').value = parts[1];
     } else {
-      document.getElementById('extMonth').value = 'ตุลาคม';
-      document.getElementById('extYear').value = 2026;
+      document.getElementById('extMonth').value = 'ธันวาคม';
+      document.getElementById('extYear').value = 2025;
     }
   }
 }
@@ -1278,7 +1387,7 @@ async function deleteExtRecord(id) {
 
 async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
-  loadMarketSummary(); // โหลดข้อมูลสะสมจากตารางแยก
+  loadMarketSummary(); // โหลดรวมข้อมูลสะสมทุกปี
 
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
