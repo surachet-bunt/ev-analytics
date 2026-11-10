@@ -335,10 +335,10 @@ body{
     </div>
   </div>
 
-  <!-- TAB 2: ตลาด EV ประเทศไทย (รวมยอดสะสมทุกปีอัตโนมัติ) -->
+  <!-- TAB 2: ตลาด EV ประเทศไทย -->
   <div id="sectionExternal" class="tab-section hide">
     
-    <!-- ส่วนข้อมูลสะสมภาพรวม (รวมผลทุกปี) -->
+    <!-- ส่วนข้อมูลสะสมภาพรวม -->
     <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
         <div>
@@ -977,6 +977,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadPrices();
   calculateCostComparison();
   loadCarSpecsData();
+  loadMarketSummary();
 });
 
 function toggleTheme() {
@@ -1204,6 +1205,298 @@ async function deleteSummaryRecord(id) {
 }
 
 // ---------------------------------------------------------
+// จัดการข้อมูลสเปกรถยนต์ไฟฟ้า (Supabase Car Specs)
+// ---------------------------------------------------------
+async function loadCarSpecsData() {
+  try {
+    const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
+    if (error) throw error;
+    
+    carSpecsList = data || [];
+    const selectEl = document.getElementById('carModelSelect');
+    
+    if (carSpecsList.length === 0) {
+      selectEl.innerHTML = '<option value="">-- ไม่พบข้อมูลรถในระบบ --</option>';
+      return;
+    }
+
+    const uniqueModels = [...new Set(carSpecsList.map(item => item.brand_model))];
+    let optHtml = '';
+    uniqueModels.forEach(model => {
+      const isSel = model === selectedCarModel ? 'selected' : '';
+      optHtml += `<option value="${model}" ${isSel}>${model}</option>`;
+    });
+    selectEl.innerHTML = optHtml;
+
+    if (!selectedCarModel || !uniqueModels.includes(selectedCarModel)) {
+      selectedCarModel = uniqueModels[0];
+      selectEl.value = selectedCarModel;
+    }
+
+    renderCarDetails(selectedCarModel);
+    populateComparisonDropdowns();
+  } catch (err) {
+    console.error('Error loading car specs:', err.message);
+  }
+}
+
+function onCarModelChanged() {
+  const selectEl = document.getElementById('carModelSelect');
+  selectedCarModel = selectEl.value;
+  renderCarDetails(selectedCarModel);
+}
+
+function renderCarDetails(modelName) {
+  const modelTrims = carSpecsList.filter(item => item.brand_model === modelName);
+  if (modelTrims.length === 0) return;
+
+  const trimContainer = document.getElementById('trimButtonsContainer');
+  let trimHtml = '';
+  modelTrims.forEach((trim, idx) => {
+    const activeClass = idx === 0 ? 'active' : '';
+    trimHtml += `<button class="trim-btn ${activeClass}" onclick='selectTrimById(${trim.id}, this)'>${trim.trim_name}</button>`;
+  });
+  trimContainer.innerHTML = trimHtml;
+
+  selectTrimById(modelTrims[0].id, trimContainer.querySelector('.trim-btn'));
+}
+
+function selectTrimById(id, btnElement) {
+  document.querySelectorAll('.trim-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+
+  const trimData = carSpecsList.find(item => item.id === id);
+  if (!trimData) return;
+
+  selectedTrimId = trimData.id;
+
+  document.getElementById('heroCarTitle').innerText = `${trimData.brand_model} - ${trimData.trim_name}`;
+  document.getElementById('heroRange').innerText = trimData.range_val;
+  document.getElementById('heroPower').innerText = trimData.power_val;
+  document.getElementById('heroAcc').innerText = trimData.acc_val;
+  document.getElementById('heroDc').innerText = trimData.dc_time;
+
+  if (trimData.banner_img) {
+    document.getElementById('heroBgImage').style.backgroundImage = `url('${trimData.banner_img}')`;
+  }
+
+  document.getElementById('specPrice').innerText = trimData.price ? '฿' + nf.format(trimData.price) : 'ระบุราคาเร็วๆ นี้';
+  
+  const webUrl = trimData.website_url ? trimData.website_url.trim() : '';
+  if (webUrl) {
+    document.getElementById('specWebsite').innerHTML = `<a href="${webUrl}" target="_blank" style="color: var(--accent); text-decoration: underline;">🔗 เยี่ยมชมเว็บไซต์ทางการ</a>`;
+  } else {
+    document.getElementById('specWebsite').innerText = '—';
+  }
+
+  const isThaiMade = trimData.made_in_thailand !== false;
+  document.getElementById('specMadeIn').innerHTML = isThaiMade 
+    ? '<span class="badge badge-pos">🇹🇭 ผลิตภายในประเทศไทย (Made in Thailand)</span>' 
+    : '<span class="badge badge-neutral">🌐 นำเข้าจากต่างประเทศ (Imported)</span>';
+
+  const prodYear = trimData.production_year || new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
+  const carAge = currentYear - prodYear;
+  let ageText = carAge === 0 ? 'ปีแรก (เปิดตัวปีนี้)' : `${carAge} ปี (ผลิตปี ${prodYear})`;
+
+  document.getElementById('specProdYear').innerText = prodYear;
+  document.getElementById('specCarAge').innerText = ageText;
+  document.getElementById('specBatteryChem').innerText = trimData.battery_chem || '-';
+  document.getElementById('specBatteryTech').innerText = trimData.battery_tech || '-';
+
+  document.getElementById('specPower').innerText = trimData.power_detail;
+  document.getElementById('specTorque').innerText = trimData.torque_val;
+  document.getElementById('specBattery').innerText = trimData.battery_val;
+  document.getElementById('specRange').innerText = trimData.range_detail;
+  document.getElementById('specDcKw').innerText = trimData.dc_kw;
+  document.getElementById('specAcKw').innerText = trimData.ac_kw;
+  document.getElementById('specDrive').innerText = trimData.drive_type;
+}
+
+function openCarModal(mode) {
+  const modal = document.getElementById('carModal');
+  modal.classList.remove('hide');
+  document.getElementById('carSpecForm').reset();
+  document.getElementById('carId').value = '';
+
+  if (mode === 'edit' && selectedTrimId) {
+    const trimData = carSpecsList.find(item => item.id === selectedTrimId);
+    if (trimData) {
+      document.getElementById('carModalTitle').innerText = `แก้ไขสเปก: ${trimData.brand_model} (${trimData.trim_name})`;
+      document.getElementById('carId').value = trimData.id;
+      document.getElementById('mBrandModel').value = trimData.brand_model;
+      document.getElementById('mTrimName').value = trimData.trim_name;
+      document.getElementById('mPrice').value = trimData.price || '';
+      document.getElementById('mWebsiteUrl').value = trimData.website_url || '';
+      document.getElementById('mMadeInThailand').value = trimData.made_in_thailand !== false ? 'true' : 'false';
+      document.getElementById('mProdYear').value = trimData.production_year || 2026;
+      document.getElementById('mBatteryChem').value = trimData.battery_chem || '';
+      document.getElementById('mBatteryTech').value = trimData.battery_tech || '';
+      document.getElementById('mRangeVal').value = trimData.range_val;
+      document.getElementById('mPowerVal').value = trimData.power_val;
+      document.getElementById('mAccVal').value = trimData.acc_val;
+      document.getElementById('mDcTime').value = trimData.dc_time;
+      document.getElementById('mPowerDetail').value = trimData.power_detail;
+      document.getElementById('mTorqueVal').value = trimData.torque_val;
+      document.getElementById('mBatteryVal').value = trimData.battery_val;
+      document.getElementById('mRangeDetail').value = trimData.range_detail;
+      document.getElementById('mDcKw').value = trimData.dc_kw;
+      document.getElementById('mAcKw').value = trimData.ac_kw;
+      document.getElementById('mDriveType').value = trimData.drive_type;
+      document.getElementById('mBannerImg').value = trimData.banner_img || '';
+    }
+  } else {
+    document.getElementById('carModalTitle').innerText = 'เพิ่มข้อมูลสเปกรถยนต์ไฟฟ้า';
+    document.getElementById('mProdYear').value = new Date().getFullYear();
+    document.getElementById('mMadeInThailand').value = 'true';
+  }
+}
+
+function closeCarModal() {
+  document.getElementById('carModal').classList.add('hide');
+}
+
+async function handleCarFormSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('carId').value;
+  const payload = {
+    brand_model: document.getElementById('mBrandModel').value.trim(),
+    trim_name: document.getElementById('mTrimName').value.trim(),
+    price: Number(document.getElementById('mPrice').value) || 0,
+    website_url: document.getElementById('mWebsiteUrl').value.trim(),
+    made_in_thailand: document.getElementById('mMadeInThailand').value === 'true',
+    production_year: Number(document.getElementById('mProdYear').value) || 2026,
+    battery_chem: document.getElementById('mBatteryChem').value.trim(),
+    battery_tech: document.getElementById('mBatteryTech').value.trim(),
+    range_val: document.getElementById('mRangeVal').value.trim(),
+    power_val: document.getElementById('mPowerVal').value.trim(),
+    acc_val: document.getElementById('mAccVal').value.trim(),
+    dc_time: document.getElementById('mDcTime').value.trim(),
+    power_detail: document.getElementById('mPowerDetail').value.trim(),
+    torque_val: document.getElementById('mTorqueVal').value.trim(),
+    battery_val: document.getElementById('mBatteryVal').value.trim(),
+    range_detail: document.getElementById('mRangeDetail').value.trim(),
+    dc_kw: document.getElementById('mDcKw').value.trim(),
+    ac_kw: document.getElementById('mAcKw').value.trim(),
+    drive_type: document.getElementById('mDriveType').value.trim(),
+    banner_img: document.getElementById('mBannerImg').value.trim()
+  };
+
+  try {
+    if (id) {
+      const { error } = await db.from('car_specs').update(payload).eq('id', Number(id));
+      if (error) throw error;
+    } else {
+      const { error } = await db.from('car_specs').insert([payload]);
+      if (error) throw error;
+    }
+
+    selectedCarModel = payload.brand_model;
+    closeCarModal();
+    loadCarSpecsData();
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสเปกรถสำเร็จ', showConfirmButton:false, timer:1500});
+  } catch (err) {
+    Swal.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ', text: err.message});
+  }
+}
+
+async function deleteCurrentCar() {
+  if (!selectedTrimId) return;
+  const trimData = carSpecsList.find(item => item.id === selectedTrimId);
+  if (!trimData) return;
+
+  Swal.fire({
+    title: `ยืนยันลบรุ่นย่อย ${trimData.brand_model} (${trimData.trim_name})?`,
+    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
+    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
+  }).then(async res => {
+    if (res.isConfirmed) {
+      try {
+        const { error } = await db.from('car_specs').delete().eq('id', selectedTrimId);
+        if (error) throw error;
+        loadCarSpecsData();
+        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลสำเร็จ', showConfirmButton:false, timer:1500});
+      } catch (err) {
+        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
+      }
+    }
+  });
+}
+
+function calculateCostComparison() {
+  const dist = parseFloat(document.getElementById('calcDistance').value) || 0;
+  const kmPerLiter = parseFloat(document.getElementById('calcFuelKmPerLiter').value) || 1;
+  const evKwhPerKm = parseFloat(document.getElementById('calcEvKwhPerKm').value) || 0.1;
+
+  const pGasoline = parseFloat(document.getElementById('calcPriceGasoline').value) || 0;
+  const pDiesel = parseFloat(document.getElementById('calcPriceDiesel').value) || 0;
+  const pEvHome = parseFloat(document.getElementById('calcPriceEvHome').value) || 0;
+  const pEvStation = parseFloat(document.getElementById('calcPriceEvStation').value) || 0;
+
+  document.getElementById('lblDistTitle').innerText = nf.format(dist);
+
+  const costGasoline = (dist / kmPerLiter) * pGasoline;
+  const costDiesel = (dist / kmPerLiter) * pDiesel;
+  const totalKwh = dist * evKwhPerKm;
+  const costEvHome = totalKwh * pEvHome;
+  const costEvStation = totalKwh * pEvStation;
+
+  const perKmGasoline = costGasoline / (dist || 1);
+  const perKmDiesel = costDiesel / (dist || 1);
+  const perKmEvHome = costEvHome / (dist || 1);
+  const perKmEvStation = costEvStation / (dist || 1);
+
+  document.getElementById('res-gasoline').innerText = '฿' + nf.format(costGasoline.toFixed(2));
+  document.getElementById('unit-gasoline').innerText = `เฉลี่ย ${perKmGasoline.toFixed(2)} บาท / กม.`;
+
+  document.getElementById('res-ev-home').innerText = '฿' + nf.format(costEvHome.toFixed(2));
+  document.getElementById('unit-ev-home').innerText = `เฉลี่ย ${perKmEvHome.toFixed(2)} บาท / กม.`;
+
+  document.getElementById('res-ev-station').innerText = '฿' + nf.format(costEvStation.toFixed(2));
+  document.getElementById('unit-ev-station').innerText = `เฉลี่ย ${perKmEvStation.toFixed(2)} บาท / กม.`;
+
+  const savingAmount = costGasoline - costEvHome;
+  const savingPercent = costGasoline > 0 ? ((savingAmount / costGasoline) * 100).toFixed(0) : 0;
+  document.getElementById('res-saving').innerText = '฿' + nf.format(savingAmount.toFixed(2));
+
+  let html = `
+    <tr>
+      <td><b>⛽ น้ำมันแก๊สโซฮอล์ 95</b></td>
+      <td>${pGasoline.toFixed(2)} บาท/ลิตร</td>
+      <td>${kmPerLiter} กม./ลิตร</td>
+      <td><b style="color: #f59e0b; font-size: 14px;">฿${nf.format(costGasoline.toFixed(2))}</b></td>
+      <td>${perKmGasoline.toFixed(2)} บาท</td>
+      <td><span class="badge badge-neutral">เกณฑ์มาตรฐาน</span></td>
+    </tr>
+    <tr>
+      <td><b>🛢️ น้ำมันดีเซล (B7)</b></td>
+      <td>${pDiesel.getElementById ? '' : pDiesel.toFixed(2)} บาท/ลิตร</td>
+      <td>${kmPerLiter} กม./ลิตร</td>
+      <td><b style="font-size: 14px;">฿${nf.format(costDiesel.toFixed(2))}</b></td>
+      <td>${perKmDiesel.toFixed(2)} บาท</td>
+      <td><span class="badge badge-neutral">—</span></td>
+    </tr>
+    <tr>
+      <td><b>🏠 ชาร์จไฟบ้าน EV (TOU Off-Peak)</b></td>
+      <td>${pEvHome.toFixed(2)} บาท/หน่วย</td>
+      <td>${evKwhPerKm} kWh/กม.</td>
+      <td><b style="color: #3b82f6; font-size: 14px;">฿${nf.format(costEvHome.toFixed(2))}</b></td>
+      <td>${perKmEvHome.toFixed(2)} บาท</td>
+      <td><span class="badge badge-pos">ประหยัดกว่า ${savingPercent}% (฿${nf.format(savingAmount.toFixed(2))})</span></td>
+    </tr>
+    <tr>
+      <td><b>🔌 ชาร์จสถานีสาธารณะ (DC Fast Charge)</b></td>
+      <td>${pEvStation.toFixed(2)} บาท/หน่วย</td>
+      <td>${evKwhPerKm} kWh/กม.</td>
+      <td><b style="color: #10b981; font-size: 14px;">฿${nf.format(costEvStation.toFixed(2))}</b></td>
+      <td>${perKmEvStation.toFixed(2)} บาท</td>
+      <td><span class="badge badge-pos">ประหยัดกว่า ${Math.max(0, ((costGasoline - costEvStation) / costGasoline * 100)).toFixed(0)}%</span></td>
+    </tr>
+  `;
+  document.getElementById('calcTableBody').innerHTML = html;
+}
+
+// ---------------------------------------------------------
 // ระบบเปรียบเทียบสเปก (Side-by-Side Comparison)
 // ---------------------------------------------------------
 function populateComparisonDropdowns() {
@@ -1387,7 +1680,7 @@ async function deleteExtRecord(id) {
 
 async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
-  loadMarketSummary(); // โหลดรวมข้อมูลสะสมทุกปี
+  loadMarketSummary();
 
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
@@ -2088,16 +2381,6 @@ async function openAddColumnModal() {
       }
     }
   });
-}
-
-// โหลดข้อมูลสเปกรถเบื้องต้น
-async function loadCarSpecsData() {
-  try {
-    const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
-    if (error) throw error;
-    carSpecsList = data || [];
-    populateComparisonDropdowns();
-  } catch (err) { console.error(err); }
 }
 </script>
 </body>
