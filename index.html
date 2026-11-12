@@ -1254,6 +1254,72 @@ function processAndRenderInternalData(rawData) {
 }
 
 // ---------------------------------------------------------
+// ฟังก์ชัน renderTable สำหรับแสดงข้อมูลในตารางหลัก
+// ---------------------------------------------------------
+function renderTable(res) {
+  const head = document.getElementById('tableHead');
+  const body = document.getElementById('tableBody');
+  head.innerHTML = '';
+  body.innerHTML = '';
+
+  const headers = res.displayHeaders;
+  let headHtml = '<tr><th>#</th><th>Brand</th><th>Year</th><th>Battery</th>';
+  headers.slice(4).forEach(h => headHtml += `<th>${h}</th>`);
+  headHtml += '<th>Total</th><th>Growth (MoM)</th><th>Actions</th></tr>';
+  head.innerHTML = headHtml;
+
+  const isFiltered = document.getElementById('searchBox').value.trim() !== '';
+
+  res.rows.forEach((r, index) => {
+    let tr = document.createElement('tr');
+    tr.dataset.search = `${r.brand} ${r.year} ${r.batteryType}`.toLowerCase();
+    
+    let displayNo = index + 1;
+    let html = `<td><b>${displayNo}</b></td>
+                <td><b style="font-size: 14px; color: var(--accent);">${r.brand}</b></td>
+                <td>${r.year}</td>
+                <td><span class="battery-badge">${r.batteryType}</span></td>`;
+    
+    headers.slice(4).forEach(h => {
+      html += `<td>${nf.format(r[h] || 0)}</td>`;
+    });
+
+    html += `<td><b style="font-size: 14px; color: var(--accent);">${nf.format(r.total)}</b></td>`;
+    
+    if(r.growthAvailable) {
+      const isUp = r.growth >= 0;
+      const badgeClass = isUp ? 'badge-pos' : 'badge-neg';
+      const arrow = isUp ? '▲' : '▼';
+      html += `<td><span class="badge ${badgeClass}">${arrow} ${Math.abs(r.growth).toFixed(1)}%</span></td>`;
+    } else {
+      html += `<td><span class="badge badge-neutral">—</span></td>`;
+    }
+
+    html += `<td>
+              <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openEditModal(${r.rowNum})">แก้ไข</button>
+              <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteRecord(${r.rowNum})">ลบ</button>
+            </td>`;
+    tr.innerHTML = html;
+    body.appendChild(tr);
+  });
+
+  if(!isFiltered && res.monthTotals) {
+    let totalTr = document.createElement('tr');
+    totalTr.className = 'total-row';
+    let totalHtml = `<td>⭐</td><td><b>GRAND TOTAL</b></td><td>-</td><td>-</td>`;
+    
+    headers.slice(4).forEach(h => {
+      const mSum = res.monthTotals[h] || 0;
+      totalHtml += `<td>${nf.format(mSum)}</td>`;
+    });
+
+    totalHtml += `<td><b>${nf.format(res.grandTotal)}</b></td><td>-</td><td>-</td>`;
+    totalTr.innerHTML = totalHtml;
+    body.appendChild(totalTr);
+  }
+}
+
+// ---------------------------------------------------------
 // ฟังก์ชันจัดการฟอร์มและปุ่มแอคชันตารางภายใน
 // ---------------------------------------------------------
 function filterTable() {
