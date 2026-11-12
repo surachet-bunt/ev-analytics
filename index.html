@@ -796,10 +796,6 @@ body{
         <input type="number" id="sumUnits" required min="0" placeholder="เช่น 122128">
       </div>
       <div class="input-group">
-        <label>อัตราเติบโต YTD (%)</label>
-        <input type="number" id="sumGrowth" step="0.01" placeholder="เช่น 25.5">
-      </div>
-      <div class="input-group">
         <label>หมายเหตุ / แหล่งอ้างอิง</label>
         <input type="text" id="sumNote" placeholder="เช่น https://autolifethailand.tv/...">
       </div>
@@ -1258,172 +1254,32 @@ function processAndRenderInternalData(rawData) {
 }
 
 // ---------------------------------------------------------
-// ฟังก์ชันจัดการฟอร์มและปุ่มแอคชันตารางภายใน
-// ---------------------------------------------------------
-function filterTable() {
-  const q = document.getElementById('searchBox').value.toLowerCase();
-  document.querySelectorAll('#tableBody tr:not(.total-row)').forEach(tr => {
-    tr.style.display = tr.dataset.search.includes(q) ? '' : 'none';
-  });
-}
-
-function toggleForm(show) {
-  const panel = document.getElementById('formPanel');
-  if(show) panel.classList.remove('hide');
-  else panel.classList.add('hide');
-}
-
-function openAddModal() {
-  document.getElementById('formTitle').innerText = 'เพิ่มข้อมูลแบรนด์ EV ใหม่';
-  document.getElementById('evForm').reset();
-  document.getElementById('formRowNum').value = '';
-  document.getElementById('formOriginalNo').value = '';
-  buildDynamicInputs();
-  toggleForm(true);
-}
-
-function openEditModal(rowNum) {
-  const r = globalData.rows.find(x => x.rowNum === rowNum);
-  if(!r) return;
-  document.getElementById('formTitle').innerText = `แก้ไขข้อมูล: ${r.brand}`;
-  document.getElementById('formRowNum').value = r.rowNum;
-  document.getElementById('formOriginalNo').value = r.no;
-  document.getElementById('brand').value = r.brand;
-  document.getElementById('year').value = r.year;
-  document.getElementById('batteryType').value = r.batteryType;
-  buildDynamicInputs(r);
-  toggleForm(true);
-
-  const formPanel = document.getElementById('formPanel');
-  formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function buildDynamicInputs(existingRow = null) {
-  const container = document.getElementById('dynamicMonthInputs');
-  container.innerHTML = '';
-  if(!globalData || !globalData.fullHeaders) return;
-  
-  globalData.fullHeaders.slice(4).forEach(h => {
-    const val = existingRow ? (existingRow[h] != null ? existingRow[h] : '') : '';
-    const div = document.createElement('div');
-    div.className = 'input-group';
-    div.innerHTML = `<label>${h}</label><input type="number" class="month-input" data-month="${h}" value="${val}" min="0" placeholder="—">`;
-    container.appendChild(div);
-  });
-}
-
-async function handleFormSubmit(e) {
-  e.preventDefault();
-  const formData = {
-    rowNum: document.getElementById('formRowNum').value,
-    brand: document.getElementById('brand').value.trim(),
-    year: Number(document.getElementById('year').value),
-    batteryType: document.getElementById('batteryType').value.trim().toUpperCase()
-  };
-
-  const monthlyPayloads = [];
-  document.querySelectorAll('.month-input').forEach(input => {
-    const monthName = input.getAttribute('data-month');
-    const val = Number(input.value.trim()) || 0;
-    monthlyPayloads.push({ monthName, val });
-  });
-
-  try {
-    let evId = formData.rowNum ? Number(formData.rowNum) : null;
-
-    if (evId) {
-      const { error: updateErr } = await db.from('ev_data').update({
-        brand: formData.brand,
-        year: formData.year,
-        battery_type: formData.batteryType
-      }).eq('id', evId);
-      if (updateErr) throw updateErr;
-    } else {
-      const { data: inserted, error: insertErr } = await db.from('ev_data').insert([{
-        brand: formData.brand,
-        year: formData.year,
-        battery_type: formData.batteryType
-      }]).select();
-      if (insertErr) throw insertErr;
-      if (inserted && inserted.length > 0) {
-        evId = inserted[0].id;
-      }
-    }
-
-    for (const m of monthlyPayloads) {
-      const { error: upsertErr } = await db.from('ev_monthly_sales').upsert({
-        ev_id: evId,
-        month_name: m.monthName,
-        units: m.val
-      }, { onConflict: 'ev_id,month_name' });
-      if (upsertErr) throw upsertErr;
-    }
-
-    toggleForm(false);
-    refreshDisplay();
-    Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกสำเร็จ', showConfirmButton:false, timer:1500});
-
-  } catch (err) {
-    Swal.fire({icon: 'error', title: 'ไม่สามารถบันทึกได้', text: err.message});
-  }
-}
-
-async function deleteRecord(rowNum) {
-  Swal.fire({
-    title: 'ยืนยันการลบรายการนี้?',
-    icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48',
-    confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก'
-  }).then(async result => {
-    if(result.isConfirmed) {
-      try {
-        const { error } = await db.from('ev_data').delete().eq('id', Number(rowNum));
-        if (error) throw error;
-        refreshDisplay();
-        Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลเรียบร้อย', showConfirmButton:false, timer:1500});
-      } catch (err) {
-        Swal.fire({icon: 'error', title: 'ลบไม่สำเร็จ', text: err.message});
-      }
-    }
-  });
-}
-
-async function openAddColumnModal() {
-  Swal.fire({
-    title: 'เพิ่มคอลัมน์เดือนใหม่', input: 'text', inputPlaceholder: 'เช่น พฤศจิกายน 2026',
-    showCancelButton: true, confirmButtonText: 'เพิ่ม', cancelButtonText: 'ยกเลิก'
-  }).then(async r => {
-    if(r.isConfirmed && r.value) {
-      const newMonth = r.value.trim();
-      try {
-        const { data: allEv, error: fetchErr } = await db.from('ev_data').select('id');
-        if (fetchErr) throw fetchErr;
-
-        if (allEv && allEv.length > 0) {
-          const payload = allEv.map(ev => ({
-            ev_id: ev.id,
-            month_name: newMonth,
-            units: 0
-          }));
-          const { error: insErr } = await db.from('ev_monthly_sales').upsert(payload, { onConflict: 'ev_id,month_name' });
-          if (insErr) throw insErr;
-        }
-        refreshDisplay();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-  });
-}
-
-// ---------------------------------------------------------
-// จัดการข้อมูลสะสม (ev_market_summary)
+// จัดการข้อมูลสะสม (ev_market_summary) - คำนวณ YTD Growth อัตโนมัติ
 // ---------------------------------------------------------
 async function loadMarketSummary() {
   try {
-    const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: false }).order('id', { ascending: false });
+    const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: true }).order('id', { ascending: true });
     if (error) throw error;
 
-    marketSummaryList = data || [];
+    let items = data || [];
+    
+    // คำนวณ YTD Growth เทียบกับงวดก่อนหน้าให้อัตโนมัติเรียงตามเวลา
+    for (let i = 0; i < items.length; i++) {
+      if (i === 0) {
+        items[i].calculated_growth = null;
+      } else {
+        const prevUnits = Number(items[i - 1].cumulative_units || 0);
+        const currUnits = Number(items[i].cumulative_units || 0);
+        if (prevUnits > 0) {
+          items[i].calculated_growth = Number((((currUnits - prevUnits) / prevUnits) * 100).toFixed(1));
+        } else {
+          items[i].calculated_growth = 0;
+        }
+      }
+    }
+
+    // เรียงลำดับใหม่ให้งวดล่าสุดขึ้นก่อนแสดงผล
+    marketSummaryList = items.slice().reverse();
 
     if (marketSummaryList.length === 0) {
       document.getElementById('sum-total-units').innerText = '0 คัน';
@@ -1437,10 +1293,10 @@ async function loadMarketSummary() {
     let totalGrowth = 0;
     let growthCount = 0;
 
-    marketSummaryList.forEach(item => {
+    items.forEach(item => {
       grandTotalUnits += Number(item.cumulative_units || 0);
-      if (item.ytd_growth != null) {
-        totalGrowth += Number(item.ytd_growth);
+      if (item.calculated_growth != null) {
+        totalGrowth += item.calculated_growth;
         growthCount++;
       }
     });
@@ -1472,7 +1328,6 @@ function openSummaryModal(mode, id = null) {
       document.getElementById('sumYear').value = item.year;
       document.getElementById('sumMonth').value = item.month_name;
       document.getElementById('sumUnits').value = item.cumulative_units;
-      document.getElementById('sumGrowth').value = item.ytd_growth != null ? item.ytd_growth : '';
       document.getElementById('sumNote').value = item.note || '';
     }
   } else {
@@ -1504,7 +1359,14 @@ function renderSummaryTableBody() {
 
   let html = '';
   marketSummaryList.forEach(item => {
-    const growthStr = item.ytd_growth != null ? (item.ytd_growth >= 0 ? `+${item.ytd_growth}%` : `${item.ytd_growth}%`) : '—';
+    const growthVal = item.calculated_growth;
+    let growthStr = '—';
+    if (growthVal != null) {
+      const isUp = growthVal >= 0;
+      const bColor = isUp ? 'var(--pos)' : 'var(--neg)';
+      growthStr = `<span style="color: ${bColor}; font-weight: 700;">${isUp ? '+' + growthVal + '%' : growthVal + '%'}</span>`;
+    }
+
     html += `
       <tr>
         <td><b>${item.month_name} ${item.year}</b></td>
@@ -1527,7 +1389,6 @@ async function handleSummaryFormSubmit(e) {
     year: Number(document.getElementById('sumYear').value),
     month_name: document.getElementById('sumMonth').value.trim(),
     cumulative_units: Number(document.getElementById('sumUnits').value),
-    ytd_growth: document.getElementById('sumGrowth').value ? Number(document.getElementById('sumGrowth').value) : null,
     note: document.getElementById('sumNote').value.trim()
   };
 
@@ -2241,185 +2102,6 @@ function renderComparisonTable() {
   });
 
   tbody.innerHTML = html;
-}
-
-// ---------------------------------------------------------
-// ฟังก์ชัน renderTable สำหรับแสดงข้อมูลในตารางหลัก
-// ---------------------------------------------------------
-function renderTable(res) {
-  const head = document.getElementById('tableHead');
-  const body = document.getElementById('tableBody');
-  head.innerHTML = '';
-  body.innerHTML = '';
-
-  const headers = res.displayHeaders;
-  let headHtml = '<tr><th>#</th><th>Brand</th><th>Year</th><th>Battery</th>';
-  headers.slice(4).forEach(h => headHtml += `<th>${h}</th>`);
-  headHtml += '<th>Total</th><th>Growth (MoM)</th><th>Actions</th></tr>';
-  head.innerHTML = headHtml;
-
-  const isFiltered = document.getElementById('searchBox').value.trim() !== '';
-
-  res.rows.forEach((r, index) => {
-    let tr = document.createElement('tr');
-    tr.dataset.search = `${r.brand} ${r.year} ${r.batteryType}`.toLowerCase();
-    
-    let displayNo = index + 1;
-    let html = `<td><b>${displayNo}</b></td>
-                <td><b style="font-size: 14px; color: var(--accent);">${r.brand}</b></td>
-                <td>${r.year}</td>
-                <td><span class="battery-badge">${r.batteryType}</span></td>`;
-    
-    headers.slice(4).forEach(h => {
-      html += `<td>${nf.format(r[h] || 0)}</td>`;
-    });
-
-    html += `<td><b style="font-size: 14px; color: var(--accent);">${nf.format(r.total)}</b></td>`;
-    
-    if(r.growthAvailable) {
-      const isUp = r.growth >= 0;
-      const badgeClass = isUp ? 'badge-pos' : 'badge-neg';
-      const arrow = isUp ? '▲' : '▼';
-      html += `<td><span class="badge ${badgeClass}">${arrow} ${Math.abs(r.growth).toFixed(1)}%</span></td>`;
-    } else {
-      html += `<td><span class="badge badge-neutral">—</span></td>`;
-    }
-
-    html += `<td>
-              <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openEditModal(${r.rowNum})">แก้ไข</button>
-              <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteRecord(${r.rowNum})">ลบ</button>
-            </td>`;
-    tr.innerHTML = html;
-    body.appendChild(tr);
-  });
-
-  if(!isFiltered && res.monthTotals) {
-    let totalTr = document.createElement('tr');
-    totalTr.className = 'total-row';
-    let totalHtml = `<td>⭐</td><td><b>GRAND TOTAL</b></td><td>-</td><td>-</td>`;
-    
-    headers.slice(4).forEach(h => {
-      const mSum = res.monthTotals[h] || 0;
-      totalHtml += `<td>${nf.format(mSum)}</td>`;
-    });
-
-    totalHtml += `<td><b>${nf.format(res.grandTotal)}</b></td><td>-</td><td>-</td>`;
-    totalTr.innerHTML = totalHtml;
-    body.appendChild(totalTr);
-  }
-}
-
-// ---------------------------------------------------------
-// ฟังก์ชัน renderCharts สำหรับวาดกราฟ Trend และ Market Share
-// ---------------------------------------------------------
-function renderCharts(res) {
-  if(!window.Chart) return;
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const textColor = isDark ? '#9ca3af' : '#64748b';
-
-  if(trendChartInstance) trendChartInstance.destroy();
-  const trendCtx = document.getElementById('trendChart').getContext('2d');
-  trendChartInstance = new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: res.trend.months,
-      datasets: res.trend.datasets.map((ds, i) => ({
-        label: ds.label,
-        data: ds.data,
-        borderColor: BALANCED_COLORS[i % BALANCED_COLORS.length],
-        backgroundColor: BALANCED_COLORS[i % BALANCED_COLORS.length] + '15',
-        fill: true,
-        tension: 0.35,
-        borderWidth: 3,
-        pointRadius: 3,
-        pointHoverRadius: 6
-      }))
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: textColor, boxWidth: 12, font: { weight: '700', size: 12 } } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: textColor, font: { weight: '600' } } },
-        y: { grid: { color: isDark ? '#334151' : '#e2e8f0' }, ticks: { color: textColor, font: { weight: '600' } } }
-      }
-    }
-  });
-
-  if(marketChartInstance) marketChartInstance.destroy();
-  
-  const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
-  const totalMarket = res.grandTotal || 1;
-  const top10 = sortedRows.slice(0, 10);
-  const othersTotal = sortedRows.slice(10).reduce((sum, r) => sum + r.total, 0);
-
-  const labels = top10.map(r => r.brand);
-  const data = top10.map(r => r.total);
-  if(othersTotal > 0) {
-    labels.push('Others');
-    data.push(othersTotal);
-  }
-
-  const marketCtx = document.getElementById('marketChart').getContext('2d');
-  marketChartInstance = new Chart(marketCtx, {
-    type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: BALANCED_COLORS.slice(0, labels.length),
-        borderWidth: 0,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      cutout: '72%'
-    }
-  });
-
-  const rankListEl = document.getElementById('marketRankList');
-  let rankHtml = '';
-  
-  top10.forEach((r, idx) => {
-    const val = r.total;
-    const percentage = ((val / totalMarket) * 100).toFixed(1);
-    const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
-    
-    rankHtml += `
-      <div class="market-rank-item">
-        <div class="market-rank-left">
-          <span class="market-badge">#${idx + 1}</span>
-          <span class="market-dot" style="background: ${color};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.brand}">${r.brand}</span>
-        </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(val)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${percentage}%)</span>
-        </div>
-      </div>
-    `;
-  });
-
-  if(othersTotal > 0) {
-    const othersPercentage = ((othersTotal / totalMarket) * 100).toFixed(1);
-    const othersColor = BALANCED_COLORS[10] || '#94a3b8';
-    rankHtml += `
-      <div class="market-rank-item">
-        <div class="market-rank-left">
-          <span class="market-badge" style="background: var(--border); color: var(--mute);">Others</span>
-          <span class="market-dot" style="background: ${othersColor};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="แบรนด์อื่นๆ ทั้งหมด">แบรนด์อื่นๆ (Others)</span>
-        </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(othersTotal)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${othersPercentage}%)</span>
-        </div>
-      </div>
-    `;
-  }
-
-  rankListEl.innerHTML = rankHtml;
 }
 </script>
 </body>
