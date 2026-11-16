@@ -35,26 +35,20 @@
   --neg:#e11d48; --neg-bg:rgba(244,63,94,0.15);
   --total-bg:rgba(2,132,199,0.12);
   --total-text:#0284c7;
-  --radius:18px;
-  --nav-bar-bg:#ffffff;
-  --nav-item-color:#334155;
-  --nav-item-hover:rgba(0,0,0,0.05);
+  --radius:16px;
 }
 
 [data-theme="dark"]{
   --bg:#070a13; --surface:#0f172a; --surface-sub:#1e293b;
   --border:#334155; --text:#f8fafc; --mute:#94a3b8; --soft:#64748b;
-  --accent:#38bdf8; --accent-glow:rgba(56,189,248,0.25);
+  --accent:#38bdf8; --accent-glow:rgba(56,189,248,0.3);
   --pos:#34d399; --pos-bg:rgba(52,211,153,0.15);
   --neg:#fb7185; --neg-bg:rgba(251,113,133,0.15);
   --total-bg:rgba(56,189,248,0.18);
   --total-text:#93c5fd;
-  --nav-bar-bg:rgba(15, 23, 42, 0.85);
-  --nav-item-color:#cbd5e1;
-  --nav-item-hover:rgba(255,255,255,0.08);
 }
 
-*, *::before, *::after{ box-sizing:border-box; }
+*,*::before,*::after{box-sizing:border-box}
 
 body{
   margin:0; min-height:100vh; font-family:'Plus Jakarta Sans','IBM Plex Sans Thai',sans-serif;
@@ -63,6 +57,85 @@ body{
 }
 
 .dashboard{ max-width:1600px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+
+/* 2-Tier Modern Header Layout */
+.header-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px 24px; box-shadow: 0 4px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 16px;
+}
+
+.header-top-row {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+}
+
+.brand-title{ display:flex; align-items:center; gap:14px; }
+.brand-logo{
+  width:46px; height:46px; background:linear-gradient(135deg, #0284c7, #38bdf8);
+  border-radius:12px; display:grid; place-items:center; color:#fff; font-size:22px;
+  box-shadow:0 0 20px rgba(56,189,248,0.4);
+}
+
+.action-toolbar {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+
+.live-status {
+  display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700;
+  color: var(--mute); padding: 6px 12px; background: var(--surface-sub);
+  border-radius: 99px; border: 1px solid var(--border);
+}
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #10b981;
+  box-shadow: 0 0 8px #10b981; animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Action Buttons */
+.action-btn {
+  padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 12px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all .2s; border: 1px solid var(--border); background: var(--surface-sub); color: var(--text);
+}
+.action-btn:hover { background: var(--border); transform: translateY(-1px); }
+.action-btn-primary { background: #0284c7; color: #fff; border: none; box-shadow: 0 4px 14px rgba(2,132,199,0.35); }
+.action-btn-primary:hover { filter: brightness(1.1); }
+.action-btn-export { background: #059669; color: #fff; border: none; box-shadow: 0 4px 14px rgba(5,150,105,0.35); }
+.action-btn-export:hover { filter: brightness(1.1); }
+
+/* Navigation Segment Bar */
+.cockpit-nav-bar {
+  display: flex; gap: 6px; padding: 6px; border-radius: 12px;
+  background: var(--surface-sub); border: 1px solid var(--border);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+
+.nav-tab-btn {
+  background: transparent; color: var(--mute); border: 1px solid transparent;
+  padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  position: relative; white-space: nowrap; transition: all .2s;
+}
+
+.nav-tab-btn:hover {
+  color: var(--text); background: rgba(255,255,255,0.06);
+}
+
+.nav-tab-btn.active {
+  background: var(--surface); color: var(--accent) !important;
+  border-color: var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.nav-tab-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 3px;
+  background: var(--accent); border-radius: 99px; box-shadow: 0 0 10px var(--accent);
+}
+
+/* Bento KPI Grid */
 .bento-top{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
 
 .card{
@@ -71,255 +144,15 @@ body{
   transition:transform .2s, border-color .2s;
 }
 .card:hover{ border-color:var(--card-accent, var(--accent)); }
-.card-kpi-1 { --card-accent: #38bdf8; }
+.card-kpi-1 { --card-accent: #3b82f6; }
 .card-kpi-2 { --card-accent: #f59e0b; }
 .card-kpi-3 { --card-accent: #10b981; }
 .card-kpi-4 { --card-accent: #8b5cf6; }
 
 .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; color: #fff; }
-
-/* =========================================================
-   แอนิเมชันสำหรับ KPI Card ตอนโหลดข้อมูล (Shimmer & Pulse)
-   ========================================================= */
-@keyframes kpiShimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes kpiTopGlow {
-  0% { transform: translateX(-100%); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateX(100%); opacity: 0; }
-}
-
-@keyframes kpiValuePopIn {
-  0% { opacity: 0; transform: translateY(6px) scale(0.95); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-
-/* เมื่อการ์ดอยู่ในสถานะโหลด */
-.card.kpi-loading::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
-  animation: kpiTopGlow 1.6s infinite ease-in-out;
-  z-index: 5;
-}
-
-/* เอฟเฟกต์ Shimmer บนตัวเลข KPI */
-.kpi-val.loading {
-  display: inline-block;
-  min-width: 100px;
-  height: 34px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(56,189,248,0.22) 50%, rgba(255,255,255,0.03) 75%);
-  background-size: 200% 100%;
-  animation: kpiShimmer 1.4s infinite linear;
-  color: transparent !important;
-  text-shadow: none !important;
-  user-select: none;
-  pointer-events: none;
-}
-
-[data-theme="light"] .kpi-val.loading {
-  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(2,132,199,0.18) 50%, rgba(0,0,0,0.04) 75%);
-  background-size: 200% 100%;
-}
-
-/* แอนิเมชันเปิดตัวตัวเลขเมื่อโหลดเสร็จ */
-.kpi-val.loaded {
-  animation: kpiValuePopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* =========================================================
-   HEADER SECTION: แยก 2 ชั้นชัดเจน สะอาด อ่านง่าย
-   ========================================================= */
-.header-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.brand-title { display: flex; align-items: center; gap: 14px; }
-.brand-logo { 
-  width: 44px; height: 44px; 
-  background: linear-gradient(135deg, #06b6d4, #3b82f6); 
-  border-radius: 12px; display: grid; place-items: center; color: #fff; font-size: 20px; 
-  box-shadow: 0 0 20px rgba(6,182,212,0.4); 
-}
-
-/* กลุ่มปุ่มคำสั่ง (Actions Toolbar ด้านบนขวา) */
-.action-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sync-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--mute);
-  background: var(--surface-sub);
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-}
-
-.pulse-dot {
-  width: 8px; height: 8px;
-  background-color: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulseLive 1.8s infinite;
-}
-
-@keyframes pulseLive {
-  0%, 100% { opacity: 0.5; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
-
-/* สไตล์ปุ่มคำสั่ง */
-.btn-action {
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface-sub);
-  color: var(--text);
-  transition: all 0.2s ease;
-}
-
-.btn-action:hover {
-  background: var(--border);
-  transform: translateY(-1px);
-}
-
-.btn-action-primary {
-  background: #2563eb !important;
-  color: #ffffff !important;
-  border-color: #2563eb !important;
-  box-shadow: 0 3px 12px rgba(37,99,235,0.3);
-}
-.btn-action-primary:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 4px 16px rgba(37,99,235,0.45);
-}
-
-.btn-action-export {
-  background: #059669 !important;
-  color: #ffffff !important;
-  border-color: #059669 !important;
-  box-shadow: 0 3px 12px rgba(5,150,105,0.3);
-}
-.btn-action-export:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 4px 16px rgba(5,150,105,0.45);
-}
-
-/* =========================================================
-   แถบเมนูแท็บ (Cockpit Segmented Navigation Bar)
-   ========================================================= */
-.nav-cockpit-bar {
-  display: flex;
-  align-items: center;
-  background: var(--nav-bar-bg);
-  border: 1px solid var(--border);
-  padding: 6px;
-  border-radius: 14px;
-  gap: 6px;
-  overflow-x: auto;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-}
-
-.nav-tab {
-  flex: 1;
-  min-width: 170px;
-  background: transparent;
-  color: var(--nav-item-color);
-  border: 1px solid transparent;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  position: relative;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  white-space: nowrap;
-}
-
-.nav-tab:hover {
-  color: var(--text);
-  background: var(--nav-item-hover);
-}
-
-/* แท็บที่เลือกใช้งาน */
-.nav-tab.active {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.04) 100%) !important;
-  color: #38bdf8 !important;
-  border-color: rgba(56, 189, 248, 0.45) !important;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
-  font-weight: 800;
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
-}
-
-/* เส้นนีออน LED Pulse ใต้แท็บที่ Active */
-.nav-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 15%;
-  width: 70%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #38bdf8, transparent);
-  border-radius: 99px;
-  box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8;
-  animation: neonPulse 2s infinite ease-in-out;
-}
-
-@keyframes neonPulse {
-  0%, 100% { opacity: 0.6; transform: scaleX(0.9); }
-  50% { opacity: 1; transform: scaleX(1.1); }
-}
-
-/* ปุ่มทั่วไปในเนื้อหา */
-.btn {
-  background: var(--surface-sub); color: var(--text); border: 1px solid var(--border);
-  padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 8px; transition: all .2s;
-}
-.btn:hover { background: var(--border); transform: translateY(-1px); }
-.btn-primary { background: var(--accent); color: #fff; border: none; box-shadow: 0 4px 15px var(--accent-glow); }
-.btn-primary:hover { filter: brightness(1.1); }
-
 .kpi-label{ font-size:11px; font-weight:800; text-transform:uppercase; color:var(--mute); letter-spacing:0.05em; }
-.kpi-val{ font-size:30px; font-weight:800; margin-top:8px; letter-spacing:-0.03em; transition: color 0.3s; }
+.kpi-val{ font-size:30px; font-weight:800; margin-top:8px; letter-spacing:-0.03em; transition: opacity .3s, transform .3s; }
 
 .trend-card-body { width: 100%; overflow-x: auto; padding-bottom: 8px; }
 .trend-chart-container { height: 320px; min-width: 700px; width: 100%; position: relative; }
@@ -334,7 +167,7 @@ body{
 
 .filter-bar{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px; }
 .search-input{
-  background:var(--surface-sub); border:1px solid var(--border); padding:10px 16px; border-radius:12px;
+  background:var(--surface-sub); border:1px solid var(--border); padding:10px 14px; border-radius:10px;
   color:var(--text); width:300px; font-size:13px; outline:none; transition:border-color .2s;
 }
 .search-input:focus{ border-color:var(--accent); }
@@ -342,30 +175,29 @@ body{
 .table-container{ width:100%; overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
 .modern-table{ width:100%; border-collapse:collapse; font-size:13px; text-align:left; }
 .modern-table th{ 
-  padding:16px; background:var(--surface-sub); color:var(--text); 
+  padding:14px 16px; background:var(--surface-sub); color:var(--text); 
   font-weight:800; text-transform:uppercase; font-size:11px; 
   border-bottom:2px solid var(--border); letter-spacing:0.03em;
 }
-.modern-table td{ padding:16px; border-bottom:1px solid var(--border); vertical-align:middle; background: var(--surface); }
+.modern-table td{ padding:14px 16px; border-bottom:1px solid var(--border); vertical-align:middle; background: var(--surface); }
 .modern-table tr:hover td{ background: var(--surface-sub) !important; color: var(--accent); }
 .total-row td{
-  background: var(--total-bg) !important;
-  font-weight: 800;
-  border-top: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent);
-  color: var(--accent);
-  font-size: 14px;
+  background: var(--total-bg) !important; font-weight: 800;
+  border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+  color: var(--accent); font-size: 14px;
+}
+.battery-badge {
+  font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;
+  background: var(--pos-bg); color: var(--pos); border: 1px solid var(--pos);
 }
 
-.battery-badge {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 700;
-  background: var(--pos-bg);
-  color: var(--pos);
-  border: 1px solid var(--pos);
+.btn{
+  background:var(--surface-sub); color:var(--text); border:1px solid var(--border);
+  padding:8px 14px; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px; transition:all .2s;
 }
+.btn:hover{ background:var(--border); }
+.btn-primary{ background:var(--accent); color:#fff; border:none; }
 
 .form-panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
 .grid-form-inputs{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:16px; }
@@ -374,13 +206,13 @@ body{
 .input-group input, .input-group select{ background:var(--surface-sub); border:1px solid var(--border); padding:10px 14px; border-radius:10px; color:var(--text); font-size:13px; outline:none; }
 .input-group input:focus, .input-group select:focus{ border-color:var(--accent); }
 
-.badge{ padding:5px 10px; border-radius:20px; font-size:11px; font-weight:800; display:inline-flex; align-items:center; gap:4px; border:1px solid transparent; }
-.badge-pos{ background:var(--pos-bg); color:var(--pos); border-color:var(--pos); }
-.badge-neg{ background:var(--neg-bg); color:var(--neg); border-color:var(--neg); }
-.badge-neutral{ background:var(--surface-sub); color:var(--mute); border-color:var(--border); }
+.badge{ padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+.badge-pos{ background:var(--pos-bg); color:var(--pos); border:1px solid var(--pos); }
+.badge-neg{ background:var(--neg-bg); color:var(--neg); border:1px solid var(--neg); }
+.badge-neutral{ background:var(--surface-sub); color:var(--mute); border:1px solid var(--border); }
 .hide{ display:none !important; }
 
-/* Car Detail & Specs Styles */
+/* Car Details & Spec Styles */
 .car-detail-container { display: flex; flex-direction: column; gap: 24px; }
 .car-hero-card {
   position: relative; border-radius: var(--radius); overflow: hidden;
@@ -397,29 +229,23 @@ body{
 .car-spec-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px; margin-top: 32px; background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px); padding: 20px; border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px); padding: 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .car-spec-item { display: flex; flex-direction: column; gap: 4px; }
-.car-spec-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; }
-.car-spec-val { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+.car-spec-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
+.car-spec-val { font-size: 20px; font-weight: 800; color: #fff; }
 .car-spec-sub { font-size: 10px; color: #64748b; }
-
 .trim-selector { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
 .trim-btn {
   background: var(--surface-sub); border: 1px solid var(--border);
-  color: var(--text); padding: 10px 24px; border-radius: 12px;
+  color: var(--text); padding: 8px 18px; border-radius: 10px;
   font-weight: 700; font-size: 12px; cursor: pointer; transition: all .2s;
 }
 .trim-btn.active {
   background: var(--accent); color: #fff; border-color: var(--accent);
-  box-shadow: 0 4px 15px var(--accent-glow);
 }
 .spec-list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-.spec-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-}
+.spec-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .spec-row:last-child { border-bottom: none; }
 .spec-row-title { color: var(--mute); font-weight: 600; }
 .spec-row-value { color: var(--text); font-weight: 800; font-size: 14px; }
@@ -428,95 +254,97 @@ body{
 <body>
 
 <div class="dashboard">
-  <!-- HEADER: โครงสร้างแบบ 2 ชั้นเพื่อความคมชัดและเป็นระเบียบ -->
-  <div class="card header-bar">
-    <!-- แถวบน: แบรนด์และชุดปุ่มคำสั่ง (Actions) -->
-    <div class="header-top">
+
+  <!-- 2-TIER MODERN HEADER -->
+  <div class="header-card">
+    <div class="header-top-row">
       <div class="brand-title">
         <div class="brand-logo">⚡</div>
         <div>
-          <h1 style="font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.02em;">EV Analytics Pro</h1>
-          <p style="font-size: 11px; color: var(--mute); margin: 2px 0 0 0;">Balanced Intelligence Platform</p>
+          <h1 style="font-size: 19px; font-weight: 800; margin: 0;">EV Analytics Pro</h1>
+          <p style="font-size: 11px; color: var(--mute); margin: 2px 0 0 0;">Intelligence Dashboard 2026</p>
         </div>
       </div>
-
       <div class="action-toolbar">
-        <span class="sync-badge">
-          <span class="pulse-dot"></span>
+        <div class="live-status">
+          <span class="status-dot"></span>
           <span id="syncText">พร้อมใช้งาน</span>
-        </span>
-        <button class="btn-action" onclick="refreshDisplay()">🔄 Refresh</button>
-        <button class="btn-action btn-action-export" onclick="exportInternalCSV()">📥 Export CSV</button>
-        <button class="btn-action btn-action-primary" onclick="openAddModal()" id="btnAddRecord">＋ เพิ่มข้อมูล</button>
-        <button class="btn-action" onclick="openAddColumnModal()" id="btnAddCol">📅 เพิ่มเดือน</button>
-        <button class="btn-action" onclick="toggleTheme()">🌓 ธีม</button>
+        </div>
+        <button class="action-btn" onclick="refreshDisplay()">🔄 Refresh</button>
+        <button class="action-btn action-btn-export" onclick="exportInternalCSV()">📥 Export CSV</button>
+        <button class="action-btn action-btn-primary" onclick="openAddModal()" id="btnAddRecord">＋ เพิ่มข้อมูล</button>
+        <button class="action-btn" onclick="openAddColumnModal()" id="btnAddCol">📅 เพิ่มเดือน</button>
+        <button class="action-btn" onclick="toggleTheme()">🌓 ธีม</button>
       </div>
     </div>
 
-    <!-- แถวล่าง: แผง Cockpit Navigation สำหรับสลับแท็บเฉพาะ 5 แท็บหลัก -->
-    <div class="nav-cockpit-bar">
-      <button class="nav-tab active" id="btnTabInternal" onclick="switchTab('internal')">📊 ข้อมูลภายใน</button>
-      <button class="nav-tab" id="btnTabExternal" onclick="switchTab('external')">🌐 ตลาด EV ประเทศไทย</button>
-      <button class="nav-tab" id="btnTabCalc" onclick="switchTab('calc')">🧮 คำนวณและเปรียบเทียบ</button>
-      <button class="nav-tab" id="btnTabCarDetail" onclick="switchTab('carDetail')">🚗 สเปกและข้อมูลรถ</button>
-      <button class="nav-tab" id="btnTabCompare" onclick="switchTab('compare')">⚖️ เปรียบเทียบสเปก</button>
+    <!-- Cockpit Navigation Bar -->
+    <div class="cockpit-nav-bar">
+      <button class="nav-tab-btn active" id="btnTabInternal" onclick="switchTab('internal')">📊 ข้อมูลภายใน</button>
+      <button class="nav-tab-btn" id="btnTabExternal" onclick="switchTab('external')">🌐 ตลาด EV ประเทศไทย</button>
+      <button class="nav-tab-btn" id="btnTabCalc" onclick="switchTab('calc')">🧮 คำนวณและเปรียบเทียบ</button>
+      <button class="nav-tab-btn" id="btnTabCarDetail" onclick="switchTab('carDetail')">🚗 สเปกและข้อมูลรถ</button>
+      <button class="nav-tab-btn" id="btnTabCompare" onclick="switchTab('compare')">⚖️ เปรียบเทียบสเปก</button>
     </div>
   </div>
 
   <!-- TAB 1: ข้อมูลภายในองค์กร -->
   <div id="sectionInternal" class="tab-section">
-    <div class="card" style="margin-bottom: 24px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
+    <div class="card" style="margin-bottom: 24px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
         <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--mute);">📅 เลือกปีจากเดือนที่บันทึก:</span>
-        <select id="selectInternalYear" class="search-input" style="width: 180px; padding: 10px 14px;" onchange="onInternalYearChange()">
+        <select id="selectInternalYear" class="search-input" style="width: 180px;" onchange="onInternalYearChange()">
           <option value="ALL">-- แสดงทุกปี (All Years) --</option>
         </select>
       </div>
       <div>
-        <span class="badge badge-pos" style="font-size: 11px; padding: 6px 12px;">⚡ กรองข้อมูลทั้ง 3 ส่วนอัตโนมัติ</span>
+        <span class="badge badge-pos" style="padding: 6px 12px;">⚡ กรองข้อมูลทั้ง 3 ส่วนอัตโนมัติ</span>
       </div>
     </div>
 
     <div class="bento-top" style="margin-bottom: 24px;">
-      <div class="card card-kpi-1" id="kpi-card-1">
+      <div class="card card-kpi-1">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Off-Peak Rate</div>
-            <div id="stat-offpeak" class="kpi-val loading" style="color: #38bdf8;">-</div>
+            <div id="stat-offpeak" class="kpi-val" style="color: #3b82f6;">-</div>
           </div>
-          <div class="kpi-icon" style="background: #38bdf8;">🌙</div>
+          <div class="kpi-icon" style="background: #3b82f6;">🌙</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-2" id="kpi-card-2">
+
+      <div class="card card-kpi-2">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Peak Rate</div>
-            <div id="stat-peak" class="kpi-val loading" style="color: #f59e0b;">-</div>
+            <div id="stat-peak" class="kpi-val" style="color: #f59e0b;">-</div>
           </div>
           <div class="kpi-icon" style="background: #f59e0b;">☀️</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-3" id="kpi-card-3">
+
+      <div class="card card-kpi-3">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Station DC Charge</div>
-            <div id="stat-dc" class="kpi-val loading" style="color: #10b981;">-</div>
+            <div id="stat-dc" class="kpi-val" style="color: #10b981;">-</div>
           </div>
           <div class="kpi-icon" style="background: #10b981;">🔌</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-4" id="kpi-card-4">
+
+      <div class="card card-kpi-4">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Total Market Units</div>
-            <div id="stat-total" class="kpi-val loading" style="color: #8b5cf6;">-</div>
+            <div id="stat-total" class="kpi-val" style="color: #8b5cf6;">-</div>
           </div>
           <div class="kpi-icon" style="background: #8b5cf6;">🚗</div>
         </div>
-        <div style="font-size:11px; color:var(--mute); margin-top:8px;"><span id="stat-brands">-</span> แบรนด์ในระบบ</div>
+        <div style="font-size:11px; color:var(--mute); margin-top:8px;"><span id="stat-brands">0</span> แบรนด์ในระบบ</div>
       </div>
     </div>
 
@@ -542,7 +370,7 @@ body{
       </div>
     </div>
 
-    <!-- ฟอร์มเพิ่มข้อมูล -->
+    <!-- Modal Form บันทึกข้อมูลรถยนต์ไฟฟ้า -->
     <div id="formPanel" class="form-panel hide">
       <h3 id="formTitle" style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">บันทึกข้อมูลรถยนต์ไฟฟ้า</h3>
       <form id="evForm" onsubmit="handleFormSubmit(event)">
@@ -587,7 +415,7 @@ body{
 
   <!-- TAB 2: ตลาด EV ประเทศไทย -->
   <div id="sectionExternal" class="tab-section hide">
-    <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-sub) 100%);">
+    <div class="card" style="margin-bottom: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
         <div>
           <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">📈 ภาพรวมยอดสะสมรถยนต์ไฟฟ้า (รวมทุกปีในระบบ)</h3>
@@ -598,42 +426,42 @@ body{
           <button class="btn" onclick="openSummaryListModal()">📋 จัดการข้อมูลสะสมทั้งหมด</button>
         </div>
       </div>
-      <div class="bento-top" style="margin-bottom: 20px;">
-        <div class="card card-kpi-1" style="background: var(--surface);">
+      <div class="bento-top">
+        <div class="card card-kpi-1">
           <div class="kpi-header">
             <div>
               <div class="kpi-label">ยอดสะสมรวมทุกปี</div>
-              <div id="sum-total-units" class="kpi-val loading" style="color: #38bdf8;">-</div>
+              <div id="sum-total-units" class="kpi-val" style="color: #3b82f6;">-</div>
             </div>
-            <div class="kpi-icon" style="background: #38bdf8;">📊</div>
+            <div class="kpi-icon" style="background: #3b82f6;">📊</div>
           </div>
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">ผลรวมทุกงวดสะสม</div>
         </div>
-        <div class="card card-kpi-2" style="background: var(--surface);">
+        <div class="card card-kpi-2">
           <div class="kpi-header">
             <div>
               <div class="kpi-label">อัตราเติบโตเฉลี่ย YTD</div>
-              <div id="sum-ytd-growth" class="kpi-val loading" style="color: #f59e0b;">-</div>
+              <div id="sum-ytd-growth" class="kpi-val" style="color: #f59e0b;">-</div>
             </div>
             <div class="kpi-icon" style="background: #f59e0b;">🚀</div>
           </div>
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">ค่าเฉลี่ยทุกงวดบันทึก</div>
         </div>
-        <div class="card card-kpi-3" style="background: var(--surface);">
+        <div class="card card-kpi-3">
           <div class="kpi-header">
             <div>
               <div class="kpi-label">งวดข้อมูลล่าสุด</div>
-              <div id="sum-latest-period" class="kpi-val loading" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
+              <div id="sum-latest-period" class="kpi-val" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #10b981;">🗓️</div>
           </div>
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">อัปเดตล่าสุด</div>
         </div>
-        <div class="card card-kpi-4" style="background: var(--surface);">
+        <div class="card card-kpi-4">
           <div class="kpi-header">
             <div>
               <div class="kpi-label">จำนวนปีที่เก็บบันทึก</div>
-              <div id="sum-total-records" class="kpi-val loading" style="color: #8b5cf6;">-</div>
+              <div id="sum-total-records" class="kpi-val" style="color: #8b5cf6;">-</div>
             </div>
             <div class="kpi-icon" style="background: #8b5cf6;">⚡</div>
           </div>
@@ -642,7 +470,7 @@ body{
       </div>
     </div>
 
-    <!-- ส่วน: ตลาด EV ประเทศไทยรายเดือน -->
+    <!-- ส่วน Top 10 ตลาด EV ประเทศไทย -->
     <div class="card" style="margin-bottom: 24px;">
       <div class="filter-bar" style="margin-bottom: 20px;">
         <div>
@@ -662,9 +490,9 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">ยอดรวม Top 10 BEV</div>
-              <div id="ext-stat-month" class="kpi-val loading" style="color: #38bdf8;">-</div>
+              <div id="ext-stat-month" class="kpi-val" style="color: #3b82f6;">-</div>
             </div>
-            <div class="kpi-icon" style="background: #38bdf8;">📅</div>
+            <div class="kpi-icon" style="background: #3b82f6;">📅</div>
           </div>
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">อ้างอิงกรมการขนส่งทางบก</div>
         </div>
@@ -672,7 +500,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">แบรนด์ยอดฮิตอันดับ 1</div>
-              <div id="ext-stat-topbrand" class="kpi-val loading" style="color: #f59e0b; font-size: 22px; margin-top: 12px;">-</div>
+              <div id="ext-stat-topbrand" class="kpi-val" style="color: #f59e0b; font-size: 22px; margin-top: 12px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #f59e0b;">👑</div>
           </div>
@@ -682,7 +510,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">เติบโตสูงสุด (Top Gainer)</div>
-              <div id="ext-stat-gainer" class="kpi-val loading" style="color: #10b981; font-size: 18px; margin-top: 14px;">-</div>
+              <div id="ext-stat-gainer" class="kpi-val" style="color: #10b981; font-size: 18px; margin-top: 14px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #10b981;">🚀</div>
           </div>
@@ -692,21 +520,19 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">สัดส่วนในกลุ่ม Top 10</div>
-              <div id="ext-stat-share" class="kpi-val loading" style="color: #8b5cf6;">100%</div>
+              <div id="ext-stat-share" class="kpi-val" style="color: #8b5cf6;">100%</div>
             </div>
             <div class="kpi-icon" style="background: #8b5cf6;">📊</div>
           </div>
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">Market Share ภายในกลุ่ม</div>
         </div>
       </div>
-
       <div class="card" style="margin-bottom: 24px; background: var(--surface-sub);">
         <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 12px;">📊 แผนภูมิแสดงส่วนแบ่งตลาด Top 10 BEV ประจำเดือน</h4>
         <div style="max-width: 350px; height: 210px; margin: 0 auto; position: relative;">
           <canvas id="extMarketChart"></canvas>
         </div>
       </div>
-
       <div class="table-container">
         <table class="modern-table">
           <thead>
@@ -774,9 +600,6 @@ body{
           </div>
         </div>
       </div>
-
-      <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 16px;">📊 ผลลัพธ์เปรียบเทียบค่าใช้จ่ายสำหรับระยะทาง <span id="lblDistTitle" style="color: var(--accent);">1,000</span> กิโลเมตร</h4>
-
       <div class="bento-top" style="margin-bottom: 24px;">
         <div class="card card-kpi-2">
           <div class="kpi-header">
@@ -792,9 +615,9 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">ชาร์จ EV บ้าน (Off-Peak)</div>
-              <div id="res-ev-home" class="kpi-val" style="color: #38bdf8;">-</div>
+              <div id="res-ev-home" class="kpi-val" style="color: #3b82f6;">-</div>
             </div>
-            <div class="kpi-icon" style="background: #38bdf8;">🏠</div>
+            <div class="kpi-icon" style="background: #3b82f6;">🏠</div>
           </div>
           <div id="unit-ev-home" style="font-size:11px; color:var(--mute); margin-top:8px;">เฉลี่ย - บาท / กม.</div>
         </div>
@@ -819,7 +642,6 @@ body{
           <div style="font-size:11px; color:var(--mute); margin-top:8px;">เมื่อชาร์จไฟบ้านผ่านระบบ TOU</div>
         </div>
       </div>
-
       <div class="table-container">
         <table class="modern-table">
           <thead>
@@ -854,14 +676,12 @@ body{
           <button class="btn" style="color: var(--neg); border-color: var(--neg);" onclick="deleteCurrentCar()" id="btnDelCar">🗑️ ลบรุ่นนี้</button>
         </div>
       </div>
-
       <div class="car-hero-card">
         <div id="heroBgImage" class="car-hero-bg" style="background-image: url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1200&auto=format&fit=crop');"></div>
         <div class="car-hero-content">
           <span class="badge badge-pos" style="margin-bottom: 12px;">Pure Electric (BEV)</span>
           <h2 id="heroCarTitle" style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">กำลังโหลด...</h2>
           <p id="heroCarDesc" style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">ยนตรกรรมพลังงานไฟฟ้า 100% ขับเคลื่อนล้อหลัง ดีไซน์ล้ำสมัย พร้อมเทคโนโลยีความปลอดภัยมาตรฐานระดับสากล</p>
-
           <div class="car-spec-grid">
             <div class="car-spec-item">
               <span class="car-spec-label">🛣️ ระยะทางวิ่งสูงสุด</span>
@@ -886,7 +706,6 @@ body{
           </div>
         </div>
       </div>
-
       <div class="card">
         <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">🎛️ เลือกรุ่นย่อย (Model Trims)</h3>
         <div id="trimButtonsContainer" class="trim-selector"></div>
@@ -958,30 +777,29 @@ body{
     <div class="card" style="margin-bottom: 24px;">
       <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">⚖️ เปรียบเทียบสเปกรถยนต์ไฟฟ้า (Side-by-Side Comparison)</h3>
       <p style="font-size: 12px; color: var(--mute); margin-bottom: 24px;">เลือกยี่ห้อและรุ่นย่อยที่คุณต้องการเปรียบเทียบข้อมูลจำเพาะแบบเทียบชนกัน</p>
-
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px;">
-        <div class="card" style="background: var(--surface-sub); padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="card" style="background: var(--surface-sub); padding: 20px;">
           <div class="input-group">
             <label>🏭 1. เลือกยี่ห้อรถ (Brand A)</label>
             <select id="compareBrand1" class="search-input" style="width: 100%;" onchange="onCompareBrandChanged(1)">
               <option value="">-- เลือกยี่ห้อรถ --</option>
             </select>
           </div>
-          <div class="input-group">
+          <div class="input-group" style="margin-top: 12px;">
             <label>🚗 2. เลือกรุ่นย่อย (Trim A)</label>
             <select id="compareCar1" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
               <option value="">-- กรุณาเลือกยี่ห้อก่อน --</option>
             </select>
           </div>
         </div>
-        <div class="card" style="background: var(--surface-sub); padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="card" style="background: var(--surface-sub); padding: 20px;">
           <div class="input-group">
             <label>🏭 1. เลือกยี่ห้อรถ (Brand B)</label>
             <select id="compareBrand2" class="search-input" style="width: 100%;" onchange="onCompareBrandChanged(2)">
               <option value="">-- เลือกยี่ห้อรถ --</option>
             </select>
           </div>
-          <div class="input-group">
+          <div class="input-group" style="margin-top: 12px;">
             <label>🚗 2. เลือกรุ่นย่อย (Trim B)</label>
             <select id="compareCar2" class="search-input" style="width: 100%;" onchange="renderComparisonTable()">
               <option value="">-- กรุณาเลือกยี่ห้อก่อน --</option>
@@ -989,7 +807,6 @@ body{
           </div>
         </div>
       </div>
-
       <div class="table-container">
         <table class="modern-table">
           <thead>
@@ -1000,15 +817,16 @@ body{
             </tr>
           </thead>
           <tbody id="compareTableBody">
-            <tr><td colspan="3" style="text-align:center; color:var(--mute);">กรุณาเลือกยี่ห้อและรุ่นย่อยของรถทั้ง 2 คันเพื่อเริ่มเปรียบเทียบสเปก</td></tr>
+            <tr><td colspan="3" style="text-align:center; color:var(--mute);">กรุณาเลือกยี่ห้อและรุ่นย่อยเพื่อเริ่มเปรียบเทียบสเปก</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- Modal จัดการข้อมูลสะสม -->
+<!-- Modal จัดการข้อมูลสะสม (ev_market_summary) -->
 <div id="summaryModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
   <h3 id="summaryModalTitle" style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">เพิ่มงวดข้อมูลสะสม</h3>
   <form id="summaryForm" onsubmit="handleSummaryFormSubmit(event)">
@@ -1038,7 +856,7 @@ body{
   </form>
 </div>
 
-<!-- Modal แสดงรายการข้อมูลสะสม -->
+<!-- Modal แสดงรายการข้อมูลสะสมทั้งหมดเพื่อแก้ไข/ลบ -->
 <div id="summaryListModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 700px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
     <h3 style="font-size: 18px; font-weight: 800; margin: 0;">📋 รายการข้อมูลสะสมทั้งหมดในระบบ</h3>
@@ -1061,7 +879,7 @@ body{
   </div>
 </div>
 
-<!-- Modal เพิ่ม/แก้ไข สเปกรถ -->
+<!-- Modal สำหรับ เพิ่ม/แก้ไข สเปกรถ -->
 <div id="carModal" class="form-panel hide" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 700px; z-index: 1000; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
   <h3 id="carModalTitle" style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">เพิ่มข้อมูลสเปกรถยนต์ไฟฟ้า</h3>
   <form id="carSpecForm" onsubmit="handleCarFormSubmit(event)">
@@ -1213,38 +1031,7 @@ let selectedCarModel = '';
 let selectedTrimId = null;
 let currentInternalYear = new Date().getFullYear().toString();
 const nf = new Intl.NumberFormat('en-US');
-const BALANCED_COLORS = ['#38bdf8', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
-
-// ---------------------------------------------------------
-// Helper ฟังก์ชันสำหรับอัปเดตค่า KPI พร้อมแอนิเมชันเปิดตัว
-// ---------------------------------------------------------
-function setKpisLoading(ids, isLoading) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const card = el.closest('.card');
-    if (isLoading) {
-      el.classList.remove('loaded');
-      el.classList.add('loading');
-      if (card) card.classList.add('kpi-loading');
-    } else {
-      el.classList.remove('loading');
-      if (card) card.classList.remove('kpi-loading');
-    }
-  });
-}
-
-function updateKpiValue(id, valText) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const card = el.closest('.card');
-  if (card) card.classList.remove('kpi-loading');
-  el.classList.remove('loading');
-  el.innerText = valText;
-  el.classList.remove('loaded');
-  void el.offsetWidth; // บังคับ trigger reflow สำหรับเล่นแอนิเมชัน
-  el.classList.add('loaded');
-}
+const BALANCED_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
 
 window.addEventListener('DOMContentLoaded', () => {
   refreshDisplay();
@@ -1264,9 +1051,6 @@ function toggleTheme() {
   if(rawGlobalRawData) processAndRenderInternalData(rawGlobalRawData);
 }
 
-// ---------------------------------------------------------
-// ฟังก์ชันสลับแท็บเมนู Cockpit Segmented Navigation
-// ---------------------------------------------------------
 function switchTab(target) {
   const secInt = document.getElementById('sectionInternal');
   const secExt = document.getElementById('sectionExternal');
@@ -1283,48 +1067,43 @@ function switchTab(target) {
   const btnAddRec = document.getElementById('btnAddRecord');
   const btnAddCol = document.getElementById('btnAddCol');
 
-  // ซ่อนทุกแท็บ
   secInt.classList.add('hide');
   secExt.classList.add('hide');
   secCalc.classList.add('hide');
   if(secCarDetail) secCarDetail.classList.add('hide');
   if(secCompare) secCompare.classList.add('hide');
 
-  // รีเซ็ตคลาสแท็บนำทางทั้งหมด
-  btnInt.className = 'nav-tab';
-  btnExt.className = 'nav-tab';
-  btnCalc.className = 'nav-tab';
-  if(btnCarDetail) btnCarDetail.className = 'nav-tab';
-  if(btnCompare) btnCompare.className = 'nav-tab';
+  btnInt.className = 'nav-tab-btn';
+  btnExt.className = 'nav-tab-btn';
+  btnCalc.className = 'nav-tab-btn';
+  if(btnCarDetail) btnCarDetail.className = 'nav-tab-btn';
+  if(btnCompare) btnCompare.className = 'nav-tab-btn';
 
-  // เปิดแท็บเป้าหมายและเปิดไฟ LED Indicator (Active)
   if (target === 'internal') {
     secInt.classList.remove('hide');
-    btnInt.className = 'nav-tab active';
+    btnInt.className = 'nav-tab-btn active';
     if(btnAddRec) btnAddRec.style.display = 'inline-flex';
     if(btnAddCol) btnAddCol.style.display = 'inline-flex';
   } else if (target === 'external') {
     secExt.classList.remove('hide');
-    btnExt.className = 'nav-tab active';
+    btnExt.className = 'nav-tab-btn active';
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
-    if (!externalLoaded) {
-      loadExternalMarketData();
-    }
+    if (!externalLoaded) loadExternalMarketData();
   } else if (target === 'calc') {
     secCalc.classList.remove('hide');
-    btnCalc.className = 'nav-tab active';
+    btnCalc.className = 'nav-tab-btn active';
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
     calculateCostComparison();
   } else if (target === 'carDetail') {
     secCarDetail.classList.remove('hide');
-    btnCarDetail.className = 'nav-tab active';
+    btnCarDetail.className = 'nav-tab-btn active';
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
   } else if (target === 'compare') {
     secCompare.classList.remove('hide');
-    btnCompare.className = 'nav-tab active';
+    btnCompare.className = 'nav-tab-btn active';
     if(btnAddRec) btnAddRec.style.display = 'none';
     if(btnAddCol) btnAddCol.style.display = 'none';
     populateComparisonDropdowns();
@@ -1332,32 +1111,28 @@ function switchTab(target) {
 }
 
 // ---------------------------------------------------------
-// ฟังก์ชันโหลดราคาพลังงาน
+// ฟังก์ชันโหลดราคาพลังงาน (แก้ไข: โหลดและอัปเดต 3 ช่องแรกเสมอ)
 // ---------------------------------------------------------
 async function loadPrices() {
-  setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], true);
   try {
     const { data } = await db.from('ev_prices').select('*').order('id', { ascending: false }).limit(1);
     if (data && data.length > 0) {
       const p = data[0];
-      updateKpiValue('stat-offpeak', '฿' + Number(p.off_peak).toFixed(2));
-      updateKpiValue('stat-peak', '฿' + Number(p.peak).toFixed(2));
-      updateKpiValue('stat-dc', '฿' + Number(p.station_dc).toFixed(2));
-
+      document.getElementById('stat-offpeak').innerText = '฿' + Number(p.off_peak).toFixed(2);
+      document.getElementById('stat-peak').innerText = '฿' + Number(p.peak).toFixed(2);
+      document.getElementById('stat-dc').innerText = '฿' + Number(p.station_dc).toFixed(2);
       if(p.off_peak) document.getElementById('calcPriceEvHome').value = Number(p.off_peak).toFixed(2);
       if(p.station_dc) document.getElementById('calcPriceEvStation').value = Number(p.station_dc).toFixed(2);
       calculateCostComparison();
-    } else {
-      updateKpiValue('stat-offpeak', '-');
-      updateKpiValue('stat-peak', '-');
-      updateKpiValue('stat-dc', '-');
     }
   } catch (e) {
     console.error(e);
-    setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], false);
   }
 }
 
+// ---------------------------------------------------------
+// ฟังก์ชันกรองข้อมูลภายในตามปี
+// ---------------------------------------------------------
 function onInternalYearChange() {
   const sel = document.getElementById('selectInternalYear');
   currentInternalYear = sel.value;
@@ -1367,15 +1142,18 @@ function onInternalYearChange() {
 }
 
 async function refreshDisplay() {
-  const syncEl = document.getElementById('syncText');
-  if (syncEl) syncEl.innerText = 'กำลังโหลด...';
-  setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], true);
+  document.getElementById('syncText').innerText = 'กำลังโหลด...';
+  
+  // 👉 เรียกโหลดราคาพลังงานเสมอ เพื่ออัปเดต 3 ช่องแรก ไม่ค้าง
+  loadPrices();
+
   try {
     const { data: rawData, error } = await db
       .from('ev_data')
       .select('id, brand, year, battery_type, ev_monthly_sales(month_name, units)');
     if (error) throw error;
     rawGlobalRawData = rawData || [];
+
     const yearSet = new Set();
     rawGlobalRawData.forEach(item => {
       if (item.ev_monthly_sales) {
@@ -1387,6 +1165,7 @@ async function refreshDisplay() {
         });
       }
     });
+
     const yearsArr = Array.from(yearSet).sort((a, b) => b - a);
     const yearSelect = document.getElementById('selectInternalYear');
     let yearOpts = '<option value="ALL">-- แสดงทุกปี (All Years) --</option>';
@@ -1401,12 +1180,12 @@ async function refreshDisplay() {
     });
     yearSelect.innerHTML = yearOpts;
     if (currentInternalYear) yearSelect.value = currentInternalYear;
+
     processAndRenderInternalData(rawGlobalRawData);
-    if (syncEl) syncEl.innerText = 'ซิงก์สำเร็จ';
+    document.getElementById('syncText').innerText = 'ซิงก์สำเร็จ';
   } catch (err) {
     console.error(err);
-    if (syncEl) syncEl.innerText = 'เกิดข้อผิดพลาด';
-    setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], false);
+    document.getElementById('syncText').innerText = 'เกิดข้อผิดพลาด';
   }
 }
 
@@ -1436,11 +1215,13 @@ function processAndRenderInternalData(rawData) {
     if (yearA !== yearB) return yearA - yearB;
     return (monthOrderThai[mNameA] || 99) - (monthOrderThai[mNameB] || 99);
   });
+
   const headers = ['No', 'Brand', 'Year', 'Battery'].concat(monthHeadersOnly);
   const displayHeaders = ['No', 'Brand', 'Year', 'Battery'].concat(monthHeadersOnly.slice(-4));
   const monthTotals = Object.create(null);
   monthHeadersOnly.forEach(m => { monthTotals[m] = 0; });
   let grandTotal = 0;
+
   const rows = rawData.map((r, index) => {
     const obj = Object.create(null);
     obj.rowNum = r.id;
@@ -1450,6 +1231,7 @@ function processAndRenderInternalData(rawData) {
     obj.batteryType = String(r.battery_type || '-').toUpperCase();
     obj.total = 0;
     obj.allMonthlyData = [];
+
     const salesMap = {};
     if (r.ev_monthly_sales) {
       r.ev_monthly_sales.forEach(s => { 
@@ -1459,6 +1241,7 @@ function processAndRenderInternalData(rawData) {
         }
       });
     }
+
     monthHeadersOnly.forEach(m => {
       const val = Number(salesMap[m] || 0);
       obj[m] = val;
@@ -1466,6 +1249,7 @@ function processAndRenderInternalData(rawData) {
       obj.allMonthlyData.push(val);
       monthTotals[m] += val;
     });
+
     grandTotal += obj.total;
     const series = obj.allMonthlyData;
     const len = series.length;
@@ -1488,7 +1272,9 @@ function processAndRenderInternalData(rawData) {
     }
     return obj;
   }).filter(r => currentInternalYear === 'ALL' || r.total > 0).sort((a, b) => b.total - a.total);
+
   rows.forEach((r, idx) => { r.no = idx + 1; });
+
   globalData = {
     fullHeaders: headers,
     displayHeaders: displayHeaders,
@@ -1500,13 +1286,11 @@ function processAndRenderInternalData(rawData) {
       datasets: rows.slice(0, 5).map(r => ({ label: r.brand, data: r.allMonthlyData }))
     }
   };
+
   renderTable(globalData);
   renderCharts(globalData);
-
-  // อัปเดตพร้อมแอนิเมชัน Pop-in
-  updateKpiValue('stat-total', nf.format(globalData.grandTotal));
-  const brandsEl = document.getElementById('stat-brands');
-  if (brandsEl) brandsEl.innerText = globalData.rows.length;
+  document.getElementById('stat-total').innerText = nf.format(globalData.grandTotal);
+  document.getElementById('stat-brands').innerText = globalData.rows.length;
 }
 
 function renderTable(res) {
@@ -1519,11 +1303,11 @@ function renderTable(res) {
   headers.slice(4).forEach(h => headHtml += `<th>${h}</th>`);
   headHtml += '<th>Total</th><th>Growth (MoM)</th><th>Actions</th></tr>';
   head.innerHTML = headHtml;
+
   const isFiltered = document.getElementById('searchBox').value.trim() !== '';
   res.rows.forEach((r, index) => {
     let tr = document.createElement('tr');
     tr.dataset.search = `${r.brand} ${r.year} ${r.batteryType}`.toLowerCase();
-
     let displayNo = index + 1;
     let html = `<td><b>${displayNo}</b></td>
                 <td><b style="font-size: 14px; color: var(--accent);">${r.brand}</b></td>
@@ -1544,17 +1328,17 @@ function renderTable(res) {
       html += `<td><span class="badge badge-neutral">—</span></td>`;
     }
     html += `<td>
-              <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openEditModal(${r.rowNum})">แก้ไข</button>
-              <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteRecord(${r.rowNum})">ลบ</button>
+              <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openEditModal(${r.rowNum})">แก้ไข</button>
+              <button class="btn" style="padding:4px 8px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteRecord(${r.rowNum})">ลบ</button>
             </td>`;
     tr.innerHTML = html;
     body.appendChild(tr);
   });
+
   if(!isFiltered && res.monthTotals) {
     let totalTr = document.createElement('tr');
     totalTr.className = 'total-row';
     let totalHtml = `<td>⭐</td><td><b>GRAND TOTAL</b></td><td>-</td><td>-</td>`;
-
     headers.slice(4).forEach(h => {
       const mSum = res.monthTotals[h] || 0;
       totalHtml += `<td>${nf.format(mSum)}</td>`;
@@ -1598,15 +1382,13 @@ function openEditModal(rowNum) {
   document.getElementById('batteryType').value = r.batteryType;
   buildDynamicInputs(r);
   toggleForm(true);
-  const formPanel = document.getElementById('formPanel');
-  formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function buildDynamicInputs(existingRow = null) {
   const container = document.getElementById('dynamicMonthInputs');
   container.innerHTML = '';
   if(!globalData || !globalData.fullHeaders) return;
-
   globalData.fullHeaders.slice(4).forEach(h => {
     const val = existingRow ? (existingRow[h] != null ? existingRow[h] : '') : '';
     const div = document.createElement('div');
@@ -1624,12 +1406,14 @@ async function handleFormSubmit(e) {
     year: Number(document.getElementById('year').value),
     batteryType: document.getElementById('batteryType').value.trim().toUpperCase()
   };
+
   const monthlyPayloads = [];
   document.querySelectorAll('.month-input').forEach(input => {
     const monthName = input.getAttribute('data-month');
     const val = Number(input.value.trim()) || 0;
     monthlyPayloads.push({ monthName, val });
   });
+
   try {
     let evId = formData.rowNum ? Number(formData.rowNum) : null;
     if (evId) {
@@ -1646,18 +1430,16 @@ async function handleFormSubmit(e) {
         battery_type: formData.batteryType
       }]).select();
       if (insertErr) throw insertErr;
-      if (inserted && inserted.length > 0) {
-        evId = inserted[0].id;
-      }
+      if (inserted && inserted.length > 0) evId = inserted[0].id;
     }
 
-    const bulkPayload = monthlyPayloads.map(m => ({
+    const bulkMonthlyPayload = monthlyPayloads.map(m => ({
       ev_id: evId,
       month_name: m.monthName,
       units: m.val
     }));
 
-    const { error: upsertErr } = await db.from('ev_monthly_sales').upsert(bulkPayload, { onConflict: 'ev_id,month_name' });
+    const { error: upsertErr } = await db.from('ev_monthly_sales').upsert(bulkMonthlyPayload, { onConflict: 'ev_id,month_name' });
     if (upsertErr) throw upsertErr;
 
     toggleForm(false);
@@ -1698,11 +1480,7 @@ async function openAddColumnModal() {
         const { data: allEv, error: fetchErr } = await db.from('ev_data').select('id');
         if (fetchErr) throw fetchErr;
         if (allEv && allEv.length > 0) {
-          const payload = allEv.map(ev => ({
-            ev_id: ev.id,
-            month_name: newMonth,
-            units: 0
-          }));
+          const payload = allEv.map(ev => ({ ev_id: ev.id, month_name: newMonth, units: 0 }));
           const { error: insErr } = await db.from('ev_monthly_sales').upsert(payload, { onConflict: 'ev_id,month_name' });
           if (insErr) throw insErr;
         }
@@ -1714,35 +1492,10 @@ async function openAddColumnModal() {
   });
 }
 
-function exportInternalCSV() {
-  if (!globalData || !globalData.rows || globalData.rows.length === 0) {
-    Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูลสำหรับ Export' });
-    return;
-  }
-  let csvContent = '\uFEFFNo,Brand,Year,Battery,' + globalData.fullHeaders.slice(4).join(',') + ',Total\r\n';
-  globalData.rows.forEach(r => {
-    const rowVals = [r.no, `"${r.brand}"`, r.year, `"${r.batteryType}"`];
-    globalData.fullHeaders.slice(4).forEach(h => {
-      rowVals.push(r[h] || 0);
-    });
-    rowVals.push(r.total);
-    csvContent += rowVals.join(',') + '\r\n';
-  });
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.setAttribute('download', 'EV_Internal_Data.csv');
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
 // ---------------------------------------------------------
 // จัดการข้อมูลสะสม (ev_market_summary)
 // ---------------------------------------------------------
 async function loadMarketSummary() {
-  setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], true);
   try {
     const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: true }).order('id', { ascending: true });
     if (error) throw error;
@@ -1763,10 +1516,10 @@ async function loadMarketSummary() {
     }
     marketSummaryList = items.slice().reverse();
     if (marketSummaryList.length === 0) {
-      updateKpiValue('sum-total-units', '0 คัน');
-      updateKpiValue('sum-ytd-growth', '—');
-      updateKpiValue('sum-latest-period', '—');
-      updateKpiValue('sum-total-records', '0 งวด');
+      document.getElementById('sum-total-units').innerText = '0 คัน';
+      document.getElementById('sum-ytd-growth').innerText = '—';
+      document.getElementById('sum-latest-period').innerText = '—';
+      document.getElementById('sum-total-records').innerText = '0 งวด';
       return;
     }
     let grandTotalUnits = 0;
@@ -1781,14 +1534,12 @@ async function loadMarketSummary() {
     });
     const avgGrowth = growthCount > 0 ? (totalGrowth / growthCount).toFixed(1) : null;
     const latest = marketSummaryList[0];
-
-    updateKpiValue('sum-total-units', nf.format(grandTotalUnits) + ' คัน');
-    updateKpiValue('sum-ytd-growth', avgGrowth != null ? (avgGrowth >= 0 ? '+' + avgGrowth + '%' : avgGrowth + '%') : '—');
-    updateKpiValue('sum-latest-period', `${latest.month_name} ${latest.year}`);
-    updateKpiValue('sum-total-records', marketSummaryList.length + ' งวด');
+    document.getElementById('sum-total-units').innerText = nf.format(grandTotalUnits) + ' คัน';
+    document.getElementById('sum-ytd-growth').innerText = avgGrowth != null ? (avgGrowth >= 0 ? '+' + avgGrowth + '%' : avgGrowth + '%') : '—';
+    document.getElementById('sum-latest-period').innerText = `${latest.month_name} ${latest.year}`;
+    document.getElementById('sum-total-records').innerText = marketSummaryList.length + ' งวด';
   } catch (err) {
     console.error('Error loading summary:', err.message);
-    setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], false);
   }
 }
 
@@ -1848,8 +1599,8 @@ function renderSummaryTableBody() {
         <td><b style="color:var(--accent);">${nf.format(item.cumulative_units)}</b></td>
         <td>${growthStr}</td>
         <td>
-          <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="closeSummaryListModal(); openSummaryModal('edit', ${item.id});">แก้ไข</button>
-          <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteSummaryRecord(${item.id})">ลบ</button>
+          <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="closeSummaryListModal(); openSummaryModal('edit', ${item.id});">แก้ไข</button>
+          <button class="btn" style="padding:4px 8px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteSummaryRecord(${item.id})">ลบ</button>
         </td>
       </tr>
     `;
@@ -1905,15 +1656,13 @@ async function deleteSummaryRecord(id) {
 // ---------------------------------------------------------
 // จัดการข้อมูลตลาด EV ประเทศไทย (External Market)
 // ---------------------------------------------------------
-async function loadExternalMarketData(selectedMonth, selectedYear) {
+async function loadExternalMarketData(selectedMonth) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
-  setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], true);
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
     if (error) throw error;
     if (!res || res.length === 0) {
       document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
-      setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
       return;
     }
     const allRows = res.map(r => ({
@@ -1925,17 +1674,12 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       units: r.units,
       evType: r.ev_type
     }));
+
     const monthYearSet = new Set();
-    allRows.forEach(r => {
-      monthYearSet.add(r.month);
-    });
+    allRows.forEach(r => monthYearSet.add(r.month));
     const availableMonths = Array.from(monthYearSet);
-    let targetMonth = selectedMonth;
-    if (!targetMonth) {
-      if (availableMonths.length > 0) {
-        targetMonth = availableMonths[availableMonths.length - 1];
-      }
-    }
+    let targetMonth = selectedMonth || (availableMonths.length > 0 ? availableMonths[availableMonths.length - 1] : '');
+
     const thaiMonthsList = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const parts = targetMonth.split(/\s+/);
     const mName = parts[0] || '';
@@ -1949,15 +1693,18 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       prevMonthName = 'ธันวาคม';
       prevYear = mYear - 1;
     }
+
     let filteredItems = allRows.filter(i => i.month.toLowerCase() === targetMonth.toLowerCase());
     filteredItems.sort((a, b) => a.rank - b.rank);
     const top10Items = filteredItems;
+
     let prevItems = allRows.filter(i => {
       const im = i.month.toLowerCase();
       return im === `${prevMonthName.toLowerCase()} ${prevYear}` || im === prevMonthName.toLowerCase();
     });
     const prevMap = new Map();
     prevItems.forEach(pi => prevMap.set(pi.brand, pi.units));
+
     top10Items.forEach(item => {
       const prevUnits = prevMap.get(item.brand);
       if (prevUnits !== undefined && prevUnits > 0) {
@@ -1968,6 +1715,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
         item.momAvailable = false;
       }
     });
+
     const totalMonth = top10Items.reduce((sum, i) => sum + i.units, 0);
     const topBrand = top10Items.length > 0 ? top10Items[0].brand : '-';
     let topGainer = '-';
@@ -1978,15 +1726,14 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
         topGainer = i.brand;
       }
     });
+
     externalLoaded = true;
     currentExternalItems = top10Items;
 
     document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth}`;
-    updateKpiValue('ext-stat-month', nf.format(totalMonth) + ' คัน');
-    updateKpiValue('ext-stat-topbrand', topBrand);
-    const gainerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : (top10Items.length > 1 ? `${top10Items[1].brand} (รองแชมป์)` : '-');
-    updateKpiValue('ext-stat-gainer', gainerText);
-    updateKpiValue('ext-stat-share', '100%');
+    document.getElementById('ext-stat-month').innerText = nf.format(totalMonth) + ' คัน';
+    document.getElementById('ext-stat-topbrand').innerText = topBrand;
+    document.getElementById('ext-stat-gainer').innerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : (top10Items.length > 1 ? `${top10Items[1].brand} (รองแชมป์)` : '-');
 
     const selectEl = document.getElementById('selectMonthYear');
     if (selectEl) {
@@ -1997,6 +1744,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       });
       selectEl.innerHTML = optHtml;
     }
+
     let html = '';
     const totalTop10 = totalMonth || 1;
     const chartLabels = [];
@@ -2005,7 +1753,6 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
       const rank = item.rank;
       const rankBadge = rank <= 3 ? `<span class="badge badge-pos">#${rank}</span>` : `<span class="badge badge-neutral">#${rank}</span>`;
       const marketShare = ((item.units / totalTop10) * 100).toFixed(1) + '%';
-
       let growthHtml = '<span class="badge badge-neutral">—</span>';
       if (item.momAvailable) {
         const isUp = item.momGrowth >= 0;
@@ -2024,8 +1771,8 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
           <td>${growthHtml}</td>
           <td>${item.month}</td>
           <td>
-            <button class="btn" style="padding:5px 10px; font-size:11px;" onclick="openExtModal('edit', ${item.id})">แก้ไข</button>
-            <button class="btn" style="padding:5px 10px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteExtRecord(${item.id})">ลบ</button>
+            <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="openExtModal('edit', ${item.id})">แก้ไข</button>
+            <button class="btn" style="padding:4px 8px; font-size:11px; color:var(--neg); border-color:var(--neg);" onclick="deleteExtRecord(${item.id})">ลบ</button>
           </td>
         </tr>
       `;
@@ -2034,7 +1781,6 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     renderExtMarketChart(chartLabels, chartData);
   } catch (err) {
     console.error(err);
-    setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
   }
 }
 
@@ -2148,7 +1894,7 @@ async function deleteExtRecord(id) {
 
 function exportExternalCSV() {
   if (!currentExternalItems || currentExternalItems.length === 0) {
-    Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูลสำหรับ Export' });
+    Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูลสำหรับ Export', text: 'กรุณารอให้ข้อมูลโหลดเสร็จเรียบร้อยก่อน' });
     return;
   }
   let csvContent = '\uFEFFRank,Brand,Units,MarketShare,Month\r\n';
@@ -2158,9 +1904,8 @@ function exportExternalCSV() {
     csvContent += `${item.rank || (idx + 1)},"${item.brand}",${item.units},"${share}","${item.month}"\r\n`;
   });
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.setAttribute('download', 'EV_Top10_BEV_Market.csv');
   document.body.appendChild(a);
   a.click();
@@ -2168,16 +1913,14 @@ function exportExternalCSV() {
 }
 
 // ---------------------------------------------------------
-// จัดการข้อมูลสเปกรถยนต์ไฟฟ้า (Supabase Car Specs)
+// จัดการข้อมูลสเปกรถยนต์ไฟฟ้า (Car Specs Management)
 // ---------------------------------------------------------
 async function loadCarSpecsData() {
   try {
     const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
     if (error) throw error;
-
     carSpecsList = data || [];
     const selectEl = document.getElementById('carModelSelect');
-
     if (carSpecsList.length === 0) {
       selectEl.innerHTML = '<option value="">-- ไม่พบข้อมูลรถในระบบ --</option>';
       return;
@@ -2213,7 +1956,7 @@ function renderCarDetails(modelName) {
   let trimHtml = '';
   modelTrims.forEach((trim, idx) => {
     const activeClass = idx === 0 ? 'active' : '';
-    trimHtml += `<button class="trim-btn ${activeClass}" onclick='selectTrimById(${trim.id}, this)'>${trim.trim_name}</button>`;
+    trimHtml += `<button class="trim-btn ${activeClass}" onclick="selectTrimById(${trim.id}, this)">${trim.trim_name}</button>`;
   });
   trimContainer.innerHTML = trimHtml;
   selectTrimById(modelTrims[0].id, trimContainer.querySelector('.trim-btn'));
@@ -2225,11 +1968,12 @@ function selectTrimById(id, btnElement) {
   const trimData = carSpecsList.find(item => item.id === id);
   if (!trimData) return;
   selectedTrimId = trimData.id;
+
   document.getElementById('heroCarTitle').innerText = `${trimData.brand_model} - ${trimData.trim_name}`;
-  document.getElementById('heroRange').innerText = trimData.range_val;
-  document.getElementById('heroPower').innerText = trimData.power_val;
-  document.getElementById('heroAcc').innerText = trimData.acc_val;
-  document.getElementById('heroDc').innerText = trimData.dc_time;
+  document.getElementById('heroRange').innerText = trimData.range_val || '-';
+  document.getElementById('heroPower').innerText = trimData.power_val || '-';
+  document.getElementById('heroAcc').innerText = trimData.acc_val || '-';
+  document.getElementById('heroDc').innerText = trimData.dc_time || '-';
   if (trimData.banner_img) {
     document.getElementById('heroBgImage').style.backgroundImage = `url('${trimData.banner_img}')`;
   }
@@ -2241,10 +1985,12 @@ function selectTrimById(id, btnElement) {
   } else {
     document.getElementById('specWebsite').innerText = '—';
   }
+
   const isThaiMade = trimData.made_in_thailand !== false;
   document.getElementById('specMadeIn').innerHTML = isThaiMade 
     ? '<span class="badge badge-pos">🇹🇭 ผลิตภายในประเทศไทย (Made in Thailand)</span>' 
     : '<span class="badge badge-neutral">🌐 นำเข้าจากต่างประเทศ (Imported)</span>';
+
   const prodYear = trimData.production_year || new Date().getFullYear();
   const currentYear = new Date().getFullYear();
   const carAge = currentYear - prodYear;
@@ -2253,13 +1999,13 @@ function selectTrimById(id, btnElement) {
   document.getElementById('specCarAge').innerText = ageText;
   document.getElementById('specBatteryChem').innerText = trimData.battery_chem || '-';
   document.getElementById('specBatteryTech').innerText = trimData.battery_tech || '-';
-  document.getElementById('specPower').innerText = trimData.power_detail;
-  document.getElementById('specTorque').innerText = trimData.torque_val;
-  document.getElementById('specBattery').innerText = trimData.battery_val;
-  document.getElementById('specRange').innerText = trimData.range_detail;
-  document.getElementById('specDcKw').innerText = trimData.dc_kw;
-  document.getElementById('specAcKw').innerText = trimData.ac_kw;
-  document.getElementById('specDrive').innerText = trimData.drive_type;
+  document.getElementById('specPower').innerText = trimData.power_detail || '-';
+  document.getElementById('specTorque').innerText = trimData.torque_val || '-';
+  document.getElementById('specBattery').innerText = trimData.battery_val || '-';
+  document.getElementById('specRange').innerText = trimData.range_detail || '-';
+  document.getElementById('specDcKw').innerText = trimData.dc_kw || '-';
+  document.getElementById('specAcKw').innerText = trimData.ac_kw || '-';
+  document.getElementById('specDrive').innerText = trimData.drive_type || '-';
 }
 
 function openCarModal(mode) {
@@ -2280,17 +2026,17 @@ function openCarModal(mode) {
       document.getElementById('mProdYear').value = trimData.production_year || 2026;
       document.getElementById('mBatteryChem').value = trimData.battery_chem || '';
       document.getElementById('mBatteryTech').value = trimData.battery_tech || '';
-      document.getElementById('mRangeVal').value = trimData.range_val;
-      document.getElementById('mPowerVal').value = trimData.power_val;
-      document.getElementById('mAccVal').value = trimData.acc_val;
-      document.getElementById('mDcTime').value = trimData.dc_time;
-      document.getElementById('mPowerDetail').value = trimData.power_detail;
-      document.getElementById('mTorqueVal').value = trimData.torque_val;
-      document.getElementById('mBatteryVal').value = trimData.battery_val;
-      document.getElementById('mRangeDetail').value = trimData.range_detail;
-      document.getElementById('mDcKw').value = trimData.dc_kw;
-      document.getElementById('mAcKw').value = trimData.ac_kw;
-      document.getElementById('mDriveType').value = trimData.drive_type;
+      document.getElementById('mRangeVal').value = trimData.range_val || '';
+      document.getElementById('mPowerVal').value = trimData.power_val || '';
+      document.getElementById('mAccVal').value = trimData.acc_val || '';
+      document.getElementById('mDcTime').value = trimData.dc_time || '';
+      document.getElementById('mPowerDetail').value = trimData.power_detail || '';
+      document.getElementById('mTorqueVal').value = trimData.torque_val || '';
+      document.getElementById('mBatteryVal').value = trimData.battery_val || '';
+      document.getElementById('mRangeDetail').value = trimData.range_detail || '';
+      document.getElementById('mDcKw').value = trimData.dc_kw || '';
+      document.getElementById('mAcKw').value = trimData.ac_kw || '';
+      document.getElementById('mDriveType').value = trimData.drive_type || '';
       document.getElementById('mBannerImg').value = trimData.banner_img || '';
     }
   } else {
@@ -2368,6 +2114,9 @@ async function deleteCurrentCar() {
   });
 }
 
+// ---------------------------------------------------------
+// ฟังก์ชันคำนวณเปรียบเทียบต้นทุนพลังงาน
+// ---------------------------------------------------------
 function calculateCostComparison() {
   const dist = parseFloat(document.getElementById('calcDistance').value) || 0;
   const kmPerLiter = parseFloat(document.getElementById('calcFuelKmPerLiter').value) || 1;
@@ -2376,13 +2125,13 @@ function calculateCostComparison() {
   const pDiesel = parseFloat(document.getElementById('calcPriceDiesel').value) || 0;
   const pEvHome = parseFloat(document.getElementById('calcPriceEvHome').value) || 0;
   const pEvStation = parseFloat(document.getElementById('calcPriceEvStation').value) || 0;
-  document.getElementById('lblDistTitle').innerText = nf.format(dist);
 
   const costGasoline = (dist / kmPerLiter) * pGasoline;
   const costDiesel = (dist / kmPerLiter) * pDiesel;
   const totalKwh = dist * evKwhPerKm;
   const costEvHome = totalKwh * pEvHome;
   const costEvStation = totalKwh * pEvStation;
+
   const perKmGasoline = costGasoline / (dist || 1);
   const perKmDiesel = costDiesel / (dist || 1);
   const perKmEvHome = costEvHome / (dist || 1);
@@ -2420,7 +2169,7 @@ function calculateCostComparison() {
       <td><b>🏠 ชาร์จไฟบ้าน EV (TOU Off-Peak)</b></td>
       <td>${pEvHome.toFixed(2)} บาท/หน่วย</td>
       <td>${evKwhPerKm} kWh/กม.</td>
-      <td><b style="color: #38bdf8; font-size: 14px;">฿${nf.format(costEvHome.toFixed(2))}</b></td>
+      <td><b style="color: #3b82f6; font-size: 14px;">฿${nf.format(costEvHome.toFixed(2))}</b></td>
       <td>${perKmEvHome.toFixed(2)} บาท</td>
       <td><span class="badge badge-pos">ประหยัดกว่า ${savingPercent}% (฿${nf.format(savingAmount.toFixed(2))})</span></td>
     </tr>
@@ -2433,7 +2182,8 @@ function calculateCostComparison() {
       <td><span class="badge badge-pos">ประหยัดกว่า ${Math.max(0, ((costGasoline - costEvStation) / costGasoline * 100)).toFixed(0)}%</span></td>
     </tr>
   `;
-  document.getElementById('calcTableBody').innerHTML = html;
+  const tbody = document.getElementById('calcTableBody');
+  if(tbody) tbody.innerHTML = html;
 }
 
 // ---------------------------------------------------------
@@ -2489,11 +2239,14 @@ function renderComparisonTable() {
   const car1 = carSpecsList.find(x => x.id == id1);
   const car2 = carSpecsList.find(x => x.id == id2);
   if (!car1 || !car2) return;
+
   th1.innerText = `${car1.brand_model} - ${car1.trim_name}`;
   th2.innerText = `${car2.brand_model} - ${car2.trim_name}`;
+
   const currentYear = new Date().getFullYear();
   const age1 = currentYear - (car1.production_year || currentYear);
   const age2 = currentYear - (car2.production_year || currentYear);
+
   const price1Str = car1.price ? '฿' + nf.format(car1.price) : 'ไม่ระบุ';
   const price2Str = car2.price ? '฿' + nf.format(car2.price) : 'ไม่ระบุ';
   const web1Str = car1.website_url ? `<a href="${car1.website_url}" target="_blank" style="color:var(--accent);">🔗 เว็บไซต์ทางการ</a>` : '—';
@@ -2544,6 +2297,7 @@ function renderCharts(res) {
   if(!window.Chart) return;
   const isDark = document.documentElement.dataset.theme === 'dark';
   const textColor = isDark ? '#9ca3af' : '#64748b';
+
   if(trendChartInstance) trendChartInstance.destroy();
   const trendCtx = document.getElementById('trendChart').getContext('2d');
   trendChartInstance = new Chart(trendCtx, {
@@ -2558,8 +2312,7 @@ function renderCharts(res) {
         fill: true,
         tension: 0.35,
         borderWidth: 3,
-        pointRadius: 3,
-        pointHoverRadius: 6
+        pointRadius: 3
       }))
     },
     options: {
@@ -2571,8 +2324,8 @@ function renderCharts(res) {
       }
     }
   });
-  if(marketChartInstance) marketChartInstance.destroy();
 
+  if(marketChartInstance) marketChartInstance.destroy();
   const sortedRows = res.rows.slice().sort((a, b) => b.total - a.total);
   const totalMarket = res.grandTotal || 1;
   const top10 = sortedRows.slice(0, 10);
@@ -2583,6 +2336,7 @@ function renderCharts(res) {
     labels.push('Others');
     data.push(othersTotal);
   }
+
   const marketCtx = document.getElementById('marketChart').getContext('2d');
   marketChartInstance = new Chart(marketCtx, {
     type: 'doughnut',
@@ -2591,8 +2345,7 @@ function renderCharts(res) {
       datasets: [{
         data: data,
         backgroundColor: BALANCED_COLORS.slice(0, labels.length),
-        borderWidth: 0,
-        hoverOffset: 6
+        borderWidth: 0
       }]
     },
     options: {
@@ -2601,24 +2354,23 @@ function renderCharts(res) {
       cutout: '72%'
     }
   });
+
   const rankListEl = document.getElementById('marketRankList');
   let rankHtml = '';
-
   top10.forEach((r, idx) => {
     const val = r.total;
     const percentage = ((val / totalMarket) * 100).toFixed(1);
     const color = BALANCED_COLORS[idx % BALANCED_COLORS.length];
-
     rankHtml += `
       <div class="market-rank-item">
         <div class="market-rank-left">
           <span class="market-badge">#${idx + 1}</span>
           <span class="market-dot" style="background: ${color};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.brand}">${r.brand}</span>
+          <span style="font-weight: 700;">${r.brand}</span>
         </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(val)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${percentage}%)</span>
+        <div>
+          <span>${nf.format(val)}</span>
+          <span style="color: var(--mute); margin-left: 6px;">(${percentage}%)</span>
         </div>
       </div>
     `;
@@ -2629,18 +2381,35 @@ function renderCharts(res) {
     rankHtml += `
       <div class="market-rank-item">
         <div class="market-rank-left">
-          <span class="market-badge" style="background: var(--border); color: var(--mute);">Others</span>
+          <span class="market-badge">Others</span>
           <span class="market-dot" style="background: ${othersColor};"></span>
-          <span style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="แบรนด์อื่นๆ ทั้งหมด">แบรนด์อื่นๆ (Others)</span>
+          <span style="font-weight: 700;">แบรนด์อื่นๆ (Others)</span>
         </div>
-        <div style="text-align: right; flex-shrink: 0; font-weight: 600;">
-          <span style="color: var(--text);">${nf.format(othersTotal)}</span>
-          <span style="color: var(--mute); margin-left: 6px; font-weight: 700;">(${othersPercentage}%)</span>
+        <div>
+          <span>${nf.format(othersTotal)}</span>
+          <span style="color: var(--mute); margin-left: 6px;">(${othersPercentage}%)</span>
         </div>
       </div>
     `;
   }
   rankListEl.innerHTML = rankHtml;
+}
+
+function exportInternalCSV() {
+  if (!globalData || !globalData.rows || globalData.rows.length === 0) {
+    Swal.fire({ icon: 'warning', title: 'ไม่มีข้อมูล', text: 'ไม่พบข้อมูลสำหรับการส่งออก' });
+    return;
+  }
+  let csv = '\uFEFFNo,Brand,Year,Battery,' + globalData.fullHeaders.slice(4).join(',') + ',Total\r\n';
+  globalData.rows.forEach(r => {
+    const months = globalData.fullHeaders.slice(4).map(m => r[m] || 0).join(',');
+    csv += `${r.no},"${r.brand}",${r.year},"${r.batteryType}",${months},${r.total}\r\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `EV_Internal_Ledger_${currentInternalYear}.csv`;
+  a.click();
 }
 </script>
 </body>
