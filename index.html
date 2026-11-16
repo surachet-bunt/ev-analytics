@@ -79,9 +79,6 @@ body{
 .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; color: #fff; }
 
-/* =========================================================
-   แอนิเมชันสำหรับ KPI Card ตอนโหลดข้อมูล (Shimmer & Pulse)
-   ========================================================= */
 @keyframes kpiShimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -98,7 +95,6 @@ body{
   100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
-/* เมื่อการ์ดอยู่ในสถานะโหลด */
 .card.kpi-loading::before {
   content: '';
   position: absolute;
@@ -109,7 +105,6 @@ body{
   z-index: 5;
 }
 
-/* เอฟเฟกต์ Shimmer บนตัวเลข KPI */
 .kpi-val.loading {
   display: inline-block;
   min-width: 100px;
@@ -129,14 +124,10 @@ body{
   background-size: 200% 100%;
 }
 
-/* แอนิเมชันเปิดตัวตัวเลขเมื่อโหลดเสร็จ */
 .kpi-val.loaded {
   animation: kpiValuePopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* =========================================================
-   HEADER SECTION: แยก 2 ชั้นชัดเจน สะอาด อ่านง่าย
-   ========================================================= */
 .header-bar {
   display: flex;
   flex-direction: column;
@@ -162,7 +153,6 @@ body{
   box-shadow: 0 0 20px rgba(6,182,212,0.4); 
 }
 
-/* กลุ่มปุ่มคำสั่ง (Actions Toolbar ด้านบนขวา) */
 .action-toolbar {
   display: flex;
   align-items: center;
@@ -196,7 +186,6 @@ body{
   50% { opacity: 1; transform: scale(1.15); }
 }
 
-/* สไตล์ปุ่มคำสั่ง */
 .btn-action {
   padding: 8px 14px;
   border-radius: 10px;
@@ -239,9 +228,6 @@ body{
   box-shadow: 0 4px 16px rgba(5,150,105,0.45);
 }
 
-/* =========================================================
-   แถบเมนูแท็บ (Cockpit Segmented Navigation Bar)
-   ========================================================= */
 .nav-cockpit-bar {
   display: flex;
   align-items: center;
@@ -279,7 +265,6 @@ body{
   background: var(--nav-item-hover);
 }
 
-/* แท็บที่เลือกใช้งาน */
 .nav-tab.active {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.04) 100%) !important;
   color: #38bdf8 !important;
@@ -289,7 +274,6 @@ body{
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }
 
-/* เส้นนีออน LED Pulse ใต้แท็บที่ Active */
 .nav-tab.active::after {
   content: '';
   position: absolute;
@@ -308,7 +292,6 @@ body{
   50% { opacity: 1; transform: scaleX(1.1); }
 }
 
-/* ปุ่มทั่วไปในเนื้อหา */
 .btn {
   background: var(--surface-sub); color: var(--text); border: 1px solid var(--border);
   padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer;
@@ -428,9 +411,8 @@ body{
 <body>
 
 <div class="dashboard">
-  <!-- HEADER: โครงสร้างแบบ 2 ชั้นเพื่อความคมชัดและเป็นระเบียบ -->
+  <!-- HEADER -->
   <div class="card header-bar">
-    <!-- แถวบน: แบรนด์และชุดปุ่มคำสั่ง (Actions) -->
     <div class="header-top">
       <div class="brand-title">
         <div class="brand-logo">⚡</div>
@@ -453,7 +435,7 @@ body{
       </div>
     </div>
 
-    <!-- แถวล่าง: แผง Cockpit Navigation สำหรับสลับแท็บเฉพาะ 5 แท็บหลัก -->
+    <!-- Cockpit Navigation Bar -->
     <div class="nav-cockpit-bar">
       <button class="nav-tab active" id="btnTabInternal" onclick="switchTab('internal')">📊 ข้อมูลภายใน</button>
       <button class="nav-tab" id="btnTabExternal" onclick="switchTab('external')">🌐 ตลาด EV ประเทศไทย</button>
@@ -1215,9 +1197,6 @@ let currentInternalYear = new Date().getFullYear().toString();
 const nf = new Intl.NumberFormat('en-US');
 const BALANCED_COLORS = ['#38bdf8', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
 
-// ---------------------------------------------------------
-// Helper ฟังก์ชันสำหรับอัปเดตค่า KPI พร้อมแอนิเมชันเปิดตัว
-// ---------------------------------------------------------
 function setKpisLoading(ids, isLoading) {
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -1242,7 +1221,7 @@ function updateKpiValue(id, valText) {
   el.classList.remove('loading');
   el.innerText = valText;
   el.classList.remove('loaded');
-  void el.offsetWidth; // บังคับ trigger reflow สำหรับเล่นแอนิเมชัน
+  void el.offsetWidth;
   el.classList.add('loaded');
 }
 
@@ -1264,9 +1243,6 @@ function toggleTheme() {
   if(rawGlobalRawData) processAndRenderInternalData(rawGlobalRawData);
 }
 
-// ---------------------------------------------------------
-// ฟังก์ชันสลับแท็บเมนู Cockpit Segmented Navigation
-// ---------------------------------------------------------
 function switchTab(target) {
   const secInt = document.getElementById('sectionInternal');
   const secExt = document.getElementById('sectionExternal');
@@ -1283,21 +1259,18 @@ function switchTab(target) {
   const btnAddRec = document.getElementById('btnAddRecord');
   const btnAddCol = document.getElementById('btnAddCol');
 
-  // ซ่อนทุกแท็บ
   secInt.classList.add('hide');
   secExt.classList.add('hide');
   secCalc.classList.add('hide');
   if(secCarDetail) secCarDetail.classList.add('hide');
   if(secCompare) secCompare.classList.add('hide');
 
-  // รีเซ็ตคลาสแท็บนำทางทั้งหมด
   btnInt.className = 'nav-tab';
   btnExt.className = 'nav-tab';
   btnCalc.className = 'nav-tab';
   if(btnCarDetail) btnCarDetail.className = 'nav-tab';
   if(btnCompare) btnCompare.className = 'nav-tab';
 
-  // เปิดแท็บเป้าหมายและเปิดไฟ LED Indicator (Active)
   if (target === 'internal') {
     secInt.classList.remove('hide');
     btnInt.className = 'nav-tab active';
@@ -1331,11 +1304,7 @@ function switchTab(target) {
   }
 }
 
-// ---------------------------------------------------------
-// ฟังก์ชันโหลดราคาพลังงาน
-// ---------------------------------------------------------
 async function loadPrices() {
-  setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], true);
   try {
     const { data } = await db.from('ev_prices').select('*').order('id', { ascending: false }).limit(1);
     if (data && data.length > 0) {
@@ -1354,7 +1323,6 @@ async function loadPrices() {
     }
   } catch (e) {
     console.error(e);
-    setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], false);
   }
 }
 
@@ -1369,7 +1337,6 @@ function onInternalYearChange() {
 async function refreshDisplay() {
   const syncEl = document.getElementById('syncText');
   if (syncEl) syncEl.innerText = 'กำลังโหลด...';
-  setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], true);
   try {
     const { data: rawData, error } = await db
       .from('ev_data')
@@ -1402,11 +1369,11 @@ async function refreshDisplay() {
     yearSelect.innerHTML = yearOpts;
     if (currentInternalYear) yearSelect.value = currentInternalYear;
     processAndRenderInternalData(rawGlobalRawData);
+    loadPrices();
     if (syncEl) syncEl.innerText = 'ซิงก์สำเร็จ';
   } catch (err) {
     console.error(err);
     if (syncEl) syncEl.innerText = 'เกิดข้อผิดพลาด';
-    setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], false);
   }
 }
 
@@ -1503,7 +1470,6 @@ function processAndRenderInternalData(rawData) {
   renderTable(globalData);
   renderCharts(globalData);
 
-  // อัปเดตพร้อมแอนิเมชัน Pop-in
   updateKpiValue('stat-total', nf.format(globalData.grandTotal));
   const brandsEl = document.getElementById('stat-brands');
   if (brandsEl) brandsEl.innerText = globalData.rows.length;
@@ -1738,11 +1704,7 @@ function exportInternalCSV() {
   document.body.removeChild(a);
 }
 
-// ---------------------------------------------------------
-// จัดการข้อมูลสะสม (ev_market_summary)
-// ---------------------------------------------------------
 async function loadMarketSummary() {
-  setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], true);
   try {
     const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: true }).order('id', { ascending: true });
     if (error) throw error;
@@ -1788,7 +1750,6 @@ async function loadMarketSummary() {
     updateKpiValue('sum-total-records', marketSummaryList.length + ' งวด');
   } catch (err) {
     console.error('Error loading summary:', err.message);
-    setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], false);
   }
 }
 
@@ -1902,18 +1863,13 @@ async function deleteSummaryRecord(id) {
   });
 }
 
-// ---------------------------------------------------------
-// จัดการข้อมูลตลาด EV ประเทศไทย (External Market)
-// ---------------------------------------------------------
 async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
-  setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], true);
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
     if (error) throw error;
     if (!res || res.length === 0) {
       document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
-      setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
       return;
     }
     const allRows = res.map(r => ({
@@ -2034,7 +1990,6 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     renderExtMarketChart(chartLabels, chartData);
   } catch (err) {
     console.error(err);
-    setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
   }
 }
 
@@ -2167,9 +2122,6 @@ function exportExternalCSV() {
   document.body.removeChild(a);
 }
 
-// ---------------------------------------------------------
-// จัดการข้อมูลสเปกรถยนต์ไฟฟ้า (Supabase Car Specs)
-// ---------------------------------------------------------
 async function loadCarSpecsData() {
   try {
     const { data, error } = await db.from('car_specs').select('*').order('id', { ascending: true });
@@ -2436,9 +2388,6 @@ function calculateCostComparison() {
   document.getElementById('calcTableBody').innerHTML = html;
 }
 
-// ---------------------------------------------------------
-// ระบบเปรียบเทียบสเปกแยกแบรนด์ / รุ่นย่อย (Cascading Dropdown)
-// ---------------------------------------------------------
 function populateComparisonDropdowns() {
   const brand1 = document.getElementById('compareBrand1');
   const brand2 = document.getElementById('compareBrand2');
@@ -2537,9 +2486,6 @@ function renderComparisonTable() {
   tbody.innerHTML = html;
 }
 
-// ---------------------------------------------------------
-// ฟังก์ชัน renderCharts สำหรับวาดกราฟ Trend และ Market Share
-// ---------------------------------------------------------
 function renderCharts(res) {
   if(!window.Chart) return;
   const isDark = document.documentElement.dataset.theme === 'dark';
