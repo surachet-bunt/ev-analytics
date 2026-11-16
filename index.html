@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#090d16">
-<title>EV Analytics Pro 2026 | Balanced Intelligence</title>
+<title>EV Analytics Pro | Balanced Intelligence</title>
 <link rel="icon" type="image/jpeg" href="https://pgjvmvxdlsufukjdakpo.supabase.co/storage/v1/object/public/car-images/EVicon.jpg">
 
 <!-- Supabase JS Client SDK -->
@@ -80,6 +80,61 @@ body{
 .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; color: #fff; }
 
 /* =========================================================
+   แอนิเมชันสำหรับ KPI Card ตอนโหลดข้อมูล (Shimmer & Pulse)
+   ========================================================= */
+@keyframes kpiShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes kpiTopGlow {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes kpiValuePopIn {
+  0% { opacity: 0; transform: translateY(6px) scale(0.95); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* เมื่อการ์ดอยู่ในสถานะโหลด */
+.card.kpi-loading::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+  animation: kpiTopGlow 1.6s infinite ease-in-out;
+  z-index: 5;
+}
+
+/* เอฟเฟกต์ Shimmer บนตัวเลข KPI */
+.kpi-val.loading {
+  display: inline-block;
+  min-width: 100px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(56,189,248,0.22) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: kpiShimmer 1.4s infinite linear;
+  color: transparent !important;
+  text-shadow: none !important;
+  user-select: none;
+  pointer-events: none;
+}
+
+[data-theme="light"] .kpi-val.loading {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(2,132,199,0.18) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+}
+
+/* แอนิเมชันเปิดตัวตัวเลขเมื่อโหลดเสร็จ */
+.kpi-val.loaded {
+  animation: kpiValuePopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =========================================================
    HEADER SECTION: แยก 2 ชั้นชัดเจน สะอาด อ่านง่าย
    ========================================================= */
 .header-bar {
@@ -141,7 +196,7 @@ body{
   50% { opacity: 1; transform: scale(1.15); }
 }
 
-/* สไตล์ปุ่มคำสั่งต่างๆ */
+/* สไตล์ปุ่มคำสั่ง */
 .btn-action {
   padding: 8px 14px;
   border-radius: 10px;
@@ -224,7 +279,7 @@ body{
   background: var(--nav-item-hover);
 }
 
-/* แท็บที่เลือกใช้งาน (Active Cockpit State) */
+/* แท็บที่เลือกใช้งาน */
 .nav-tab.active {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.04) 100%) !important;
   color: #38bdf8 !important;
@@ -264,7 +319,7 @@ body{
 .btn-primary:hover { filter: brightness(1.1); }
 
 .kpi-label{ font-size:11px; font-weight:800; text-transform:uppercase; color:var(--mute); letter-spacing:0.05em; }
-.kpi-val{ font-size:30px; font-weight:800; margin-top:8px; letter-spacing:-0.03em; }
+.kpi-val{ font-size:30px; font-weight:800; margin-top:8px; letter-spacing:-0.03em; transition: color 0.3s; }
 
 .trend-card-body { width: 100%; overflow-x: auto; padding-bottom: 8px; }
 .trend-chart-container { height: 320px; min-width: 700px; width: 100%; position: relative; }
@@ -423,45 +478,45 @@ body{
     </div>
 
     <div class="bento-top" style="margin-bottom: 24px;">
-      <div class="card card-kpi-1">
+      <div class="card card-kpi-1" id="kpi-card-1">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Off-Peak Rate</div>
-            <div id="stat-offpeak" class="kpi-val" style="color: #38bdf8;">-</div>
+            <div id="stat-offpeak" class="kpi-val loading" style="color: #38bdf8;">-</div>
           </div>
           <div class="kpi-icon" style="background: #38bdf8;">🌙</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-2">
+      <div class="card card-kpi-2" id="kpi-card-2">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Peak Rate</div>
-            <div id="stat-peak" class="kpi-val" style="color: #f59e0b;">-</div>
+            <div id="stat-peak" class="kpi-val loading" style="color: #f59e0b;">-</div>
           </div>
           <div class="kpi-icon" style="background: #f59e0b;">☀️</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-3">
+      <div class="card card-kpi-3" id="kpi-card-3">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Station DC Charge</div>
-            <div id="stat-dc" class="kpi-val" style="color: #10b981;">-</div>
+            <div id="stat-dc" class="kpi-val loading" style="color: #10b981;">-</div>
           </div>
           <div class="kpi-icon" style="background: #10b981;">🔌</div>
         </div>
         <div style="font-size:11px; color:var(--mute); margin-top:8px;">บาท / หน่วย (kWh)</div>
       </div>
-      <div class="card card-kpi-4">
+      <div class="card card-kpi-4" id="kpi-card-4">
         <div class="kpi-header">
           <div>
             <div class="kpi-label">Total Market Units</div>
-            <div id="stat-total" class="kpi-val" style="color: #8b5cf6;">-</div>
+            <div id="stat-total" class="kpi-val loading" style="color: #8b5cf6;">-</div>
           </div>
           <div class="kpi-icon" style="background: #8b5cf6;">🚗</div>
         </div>
-        <div style="font-size:11px; color:var(--mute); margin-top:8px;"><span id="stat-brands">0</span> แบรนด์ในระบบ</div>
+        <div style="font-size:11px; color:var(--mute); margin-top:8px;"><span id="stat-brands">-</span> แบรนด์ในระบบ</div>
       </div>
     </div>
 
@@ -548,7 +603,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">ยอดสะสมรวมทุกปี</div>
-              <div id="sum-total-units" class="kpi-val" style="color: #38bdf8;">-</div>
+              <div id="sum-total-units" class="kpi-val loading" style="color: #38bdf8;">-</div>
             </div>
             <div class="kpi-icon" style="background: #38bdf8;">📊</div>
           </div>
@@ -558,7 +613,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">อัตราเติบโตเฉลี่ย YTD</div>
-              <div id="sum-ytd-growth" class="kpi-val" style="color: #f59e0b;">-</div>
+              <div id="sum-ytd-growth" class="kpi-val loading" style="color: #f59e0b;">-</div>
             </div>
             <div class="kpi-icon" style="background: #f59e0b;">🚀</div>
           </div>
@@ -568,7 +623,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">งวดข้อมูลล่าสุด</div>
-              <div id="sum-latest-period" class="kpi-val" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
+              <div id="sum-latest-period" class="kpi-val loading" style="color: #10b981; font-size: 20px; margin-top: 12px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #10b981;">🗓️</div>
           </div>
@@ -578,7 +633,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">จำนวนปีที่เก็บบันทึก</div>
-              <div id="sum-total-records" class="kpi-val" style="color: #8b5cf6;">-</div>
+              <div id="sum-total-records" class="kpi-val loading" style="color: #8b5cf6;">-</div>
             </div>
             <div class="kpi-icon" style="background: #8b5cf6;">⚡</div>
           </div>
@@ -607,7 +662,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">ยอดรวม Top 10 BEV</div>
-              <div id="ext-stat-month" class="kpi-val" style="color: #38bdf8;">-</div>
+              <div id="ext-stat-month" class="kpi-val loading" style="color: #38bdf8;">-</div>
             </div>
             <div class="kpi-icon" style="background: #38bdf8;">📅</div>
           </div>
@@ -617,7 +672,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">แบรนด์ยอดฮิตอันดับ 1</div>
-              <div id="ext-stat-topbrand" class="kpi-val" style="color: #f59e0b; font-size: 22px; margin-top: 12px;">-</div>
+              <div id="ext-stat-topbrand" class="kpi-val loading" style="color: #f59e0b; font-size: 22px; margin-top: 12px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #f59e0b;">👑</div>
           </div>
@@ -627,7 +682,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">เติบโตสูงสุด (Top Gainer)</div>
-              <div id="ext-stat-gainer" class="kpi-val" style="color: #10b981; font-size: 18px; margin-top: 14px;">-</div>
+              <div id="ext-stat-gainer" class="kpi-val loading" style="color: #10b981; font-size: 18px; margin-top: 14px;">-</div>
             </div>
             <div class="kpi-icon" style="background: #10b981;">🚀</div>
           </div>
@@ -637,7 +692,7 @@ body{
           <div class="kpi-header">
             <div>
               <div class="kpi-label">สัดส่วนในกลุ่ม Top 10</div>
-              <div id="ext-stat-share" class="kpi-val" style="color: #8b5cf6;">100%</div>
+              <div id="ext-stat-share" class="kpi-val loading" style="color: #8b5cf6;">100%</div>
             </div>
             <div class="kpi-icon" style="background: #8b5cf6;">📊</div>
           </div>
@@ -1160,6 +1215,37 @@ let currentInternalYear = new Date().getFullYear().toString();
 const nf = new Intl.NumberFormat('en-US');
 const BALANCED_COLORS = ['#38bdf8', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f43f5e', '#a855f7', '#14b8a6', '#94a3b8'];
 
+// ---------------------------------------------------------
+// Helper ฟังก์ชันสำหรับอัปเดตค่า KPI พร้อมแอนิเมชันเปิดตัว
+// ---------------------------------------------------------
+function setKpisLoading(ids, isLoading) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const card = el.closest('.card');
+    if (isLoading) {
+      el.classList.remove('loaded');
+      el.classList.add('loading');
+      if (card) card.classList.add('kpi-loading');
+    } else {
+      el.classList.remove('loading');
+      if (card) card.classList.remove('kpi-loading');
+    }
+  });
+}
+
+function updateKpiValue(id, valText) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const card = el.closest('.card');
+  if (card) card.classList.remove('kpi-loading');
+  el.classList.remove('loading');
+  el.innerText = valText;
+  el.classList.remove('loaded');
+  void el.offsetWidth; // บังคับ trigger reflow สำหรับเล่นแอนิเมชัน
+  el.classList.add('loaded');
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   refreshDisplay();
   loadPrices();
@@ -1249,19 +1335,26 @@ function switchTab(target) {
 // ฟังก์ชันโหลดราคาพลังงาน
 // ---------------------------------------------------------
 async function loadPrices() {
+  setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], true);
   try {
     const { data } = await db.from('ev_prices').select('*').order('id', { ascending: false }).limit(1);
     if (data && data.length > 0) {
       const p = data[0];
-      document.getElementById('stat-offpeak').innerText = '฿' + Number(p.off_peak).toFixed(2);
-      document.getElementById('stat-peak').innerText = '฿' + Number(p.peak).toFixed(2);
-      document.getElementById('stat-dc').innerText = '฿' + Number(p.station_dc).toFixed(2);
+      updateKpiValue('stat-offpeak', '฿' + Number(p.off_peak).toFixed(2));
+      updateKpiValue('stat-peak', '฿' + Number(p.peak).toFixed(2));
+      updateKpiValue('stat-dc', '฿' + Number(p.station_dc).toFixed(2));
+
       if(p.off_peak) document.getElementById('calcPriceEvHome').value = Number(p.off_peak).toFixed(2);
       if(p.station_dc) document.getElementById('calcPriceEvStation').value = Number(p.station_dc).toFixed(2);
       calculateCostComparison();
+    } else {
+      updateKpiValue('stat-offpeak', '-');
+      updateKpiValue('stat-peak', '-');
+      updateKpiValue('stat-dc', '-');
     }
   } catch (e) {
     console.error(e);
+    setKpisLoading(['stat-offpeak', 'stat-peak', 'stat-dc'], false);
   }
 }
 
@@ -1276,6 +1369,7 @@ function onInternalYearChange() {
 async function refreshDisplay() {
   const syncEl = document.getElementById('syncText');
   if (syncEl) syncEl.innerText = 'กำลังโหลด...';
+  setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], true);
   try {
     const { data: rawData, error } = await db
       .from('ev_data')
@@ -1312,6 +1406,7 @@ async function refreshDisplay() {
   } catch (err) {
     console.error(err);
     if (syncEl) syncEl.innerText = 'เกิดข้อผิดพลาด';
+    setKpisLoading(['stat-total', 'stat-offpeak', 'stat-peak', 'stat-dc'], false);
   }
 }
 
@@ -1407,8 +1502,11 @@ function processAndRenderInternalData(rawData) {
   };
   renderTable(globalData);
   renderCharts(globalData);
-  document.getElementById('stat-total').innerText = nf.format(globalData.grandTotal);
-  document.getElementById('stat-brands').innerText = globalData.rows.length;
+
+  // อัปเดตพร้อมแอนิเมชัน Pop-in
+  updateKpiValue('stat-total', nf.format(globalData.grandTotal));
+  const brandsEl = document.getElementById('stat-brands');
+  if (brandsEl) brandsEl.innerText = globalData.rows.length;
 }
 
 function renderTable(res) {
@@ -1644,6 +1742,7 @@ function exportInternalCSV() {
 // จัดการข้อมูลสะสม (ev_market_summary)
 // ---------------------------------------------------------
 async function loadMarketSummary() {
+  setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], true);
   try {
     const { data, error } = await db.from('ev_market_summary').select('*').order('year', { ascending: true }).order('id', { ascending: true });
     if (error) throw error;
@@ -1664,10 +1763,10 @@ async function loadMarketSummary() {
     }
     marketSummaryList = items.slice().reverse();
     if (marketSummaryList.length === 0) {
-      document.getElementById('sum-total-units').innerText = '0 คัน';
-      document.getElementById('sum-ytd-growth').innerText = '—';
-      document.getElementById('sum-latest-period').innerText = '—';
-      document.getElementById('sum-total-records').innerText = '0 งวด';
+      updateKpiValue('sum-total-units', '0 คัน');
+      updateKpiValue('sum-ytd-growth', '—');
+      updateKpiValue('sum-latest-period', '—');
+      updateKpiValue('sum-total-records', '0 งวด');
       return;
     }
     let grandTotalUnits = 0;
@@ -1682,12 +1781,14 @@ async function loadMarketSummary() {
     });
     const avgGrowth = growthCount > 0 ? (totalGrowth / growthCount).toFixed(1) : null;
     const latest = marketSummaryList[0];
-    document.getElementById('sum-total-units').innerText = nf.format(grandTotalUnits) + ' คัน';
-    document.getElementById('sum-ytd-growth').innerText = avgGrowth != null ? (avgGrowth >= 0 ? '+' + avgGrowth + '%' : avgGrowth + '%') : '—';
-    document.getElementById('sum-latest-period').innerText = `${latest.month_name} ${latest.year}`;
-    document.getElementById('sum-total-records').innerText = marketSummaryList.length + ' งวด';
+
+    updateKpiValue('sum-total-units', nf.format(grandTotalUnits) + ' คัน');
+    updateKpiValue('sum-ytd-growth', avgGrowth != null ? (avgGrowth >= 0 ? '+' + avgGrowth + '%' : avgGrowth + '%') : '—');
+    updateKpiValue('sum-latest-period', `${latest.month_name} ${latest.year}`);
+    updateKpiValue('sum-total-records', marketSummaryList.length + ' งวด');
   } catch (err) {
     console.error('Error loading summary:', err.message);
+    setKpisLoading(['sum-total-units', 'sum-ytd-growth', 'sum-latest-period', 'sum-total-records'], false);
   }
 }
 
@@ -1806,11 +1907,13 @@ async function deleteSummaryRecord(id) {
 // ---------------------------------------------------------
 async function loadExternalMarketData(selectedMonth, selectedYear) {
   document.getElementById('extSourceInfo').innerText = 'กำลังดึงข้อมูล Top 10 BEV...';
+  setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], true);
   try {
     const { data: res, error } = await db.from('external_ev_market').select('*').eq('ev_type', 'BEV');
     if (error) throw error;
     if (!res || res.length === 0) {
       document.getElementById('externalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--mute);">ไม่พบข้อมูลในระบบ</td></tr>';
+      setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
       return;
     }
     const allRows = res.map(r => ({
@@ -1879,9 +1982,12 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     currentExternalItems = top10Items;
 
     document.getElementById('extSourceInfo').innerText = `แหล่งข้อมูล: สถิติยานยนต์ไฟฟ้า (BEV) กรมการขนส่งทางบก | ข้อมูลประจำเดือน: ${targetMonth}`;
-    document.getElementById('ext-stat-month').innerText = nf.format(totalMonth) + ' คัน';
-    document.getElementById('ext-stat-topbrand').innerText = topBrand;
-    document.getElementById('ext-stat-gainer').innerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : (top10Items.length > 1 ? `${top10Items[1].brand} (รองแชมป์)` : '-');
+    updateKpiValue('ext-stat-month', nf.format(totalMonth) + ' คัน');
+    updateKpiValue('ext-stat-topbrand', topBrand);
+    const gainerText = topGainer !== '-' ? `${topGainer} (+${maxGrowth.toFixed(1)}%)` : (top10Items.length > 1 ? `${top10Items[1].brand} (รองแชมป์)` : '-');
+    updateKpiValue('ext-stat-gainer', gainerText);
+    updateKpiValue('ext-stat-share', '100%');
+
     const selectEl = document.getElementById('selectMonthYear');
     if (selectEl) {
       let optHtml = '';
@@ -1928,6 +2034,7 @@ async function loadExternalMarketData(selectedMonth, selectedYear) {
     renderExtMarketChart(chartLabels, chartData);
   } catch (err) {
     console.error(err);
+    setKpisLoading(['ext-stat-month', 'ext-stat-topbrand', 'ext-stat-gainer', 'ext-stat-share'], false);
   }
 }
 
