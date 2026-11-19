@@ -1486,20 +1486,24 @@ function renderTable(res) {
   headHtml += '<th>Total</th><th>Growth (MoM)</th><th>Actions</th></tr>';
   head.innerHTML = headHtml;
   const isFiltered = document.getElementById('searchBox').value.trim() !== '';
+  
   res.rows.forEach((r, index) => {
     let tr = document.createElement('tr');
     tr.dataset.search = `${r.brand} ${r.year} ${r.batteryType}`.toLowerCase();
 
     let displayNo = index + 1;
+    // ปรับ Brand เป็นสีน้ำเงิน (#38bdf8 หรือใช้ var(--accent))
     let html = `<td><b>${displayNo}</b></td>
-                <td><b style="font-size: 14px; color: var(--accent);">${r.brand}</b></td>
+                <td><b style="font-size: 14px; color: #38bdf8;">${r.brand}</b></td>
                 <td>${r.year}</td>
                 <td><span class="battery-badge">${r.batteryType}</span></td>`;
 
     headers.slice(4).forEach(h => {
       html += `<td>${nf.format(r[h] || 0)}</td>`;
     });
-    html += `<td><b style="font-size: 14px; color: var(--accent);">${nf.format(r.total)}</b></td>`;
+    
+    // ปรับ Total เป็นสีน้ำเงิน (#38bdf8)
+    html += `<td><b style="font-size: 14px; color: #38bdf8;">${nf.format(r.total)}</b></td>`;
 
     if(r.growthAvailable) {
       const isUp = r.growth >= 0;
@@ -1516,6 +1520,7 @@ function renderTable(res) {
     tr.innerHTML = html;
     body.appendChild(tr);
   });
+
   if(!isFiltered && res.monthTotals) {
     let totalTr = document.createElement('tr');
     totalTr.className = 'total-row';
